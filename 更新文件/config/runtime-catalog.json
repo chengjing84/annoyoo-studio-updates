@@ -1,0 +1,17 @@
+{
+  "formatVersion": 1,
+  "packageId": "poseatlas-runtime-windows-nvidia-1.0.0",
+  "archiveName": "PoseAtlas-Runtime-Windows-NVIDIA-1.0.0.zip",
+  "bytes": 2822375955,
+  "sha256": "7eb22086ce1a743cdcb817c278491bae473df6c73c60bd83455b7eff267ae9fa",
+  "unpackedBytes": 4295114008,
+  "downloadUrl": "",
+  "quarkUrl": "",
+  "quarkCode": "",
+  "platform": "win32",
+  "arch": "x64",
+  "compatibility": "Windows x64 / NVIDIA，驱动需支持 CUDA 13；不包含模型",
+  "python": "3.13.15",
+  "torch": "2.13.0+cu130",
+  "comfyUI": "0.42.1"
+}

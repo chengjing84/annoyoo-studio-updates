@@ -1,0 +1,7 @@
+.local/
+output/
+models/
+runtime/
+release/
+*.part
+__pycache__/

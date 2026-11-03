@@ -1,0 +1,22 @@
+<dialog class="api-dialog" id="apiSettingsDialog" aria-labelledby="apiSettingsTitle">
+  <div class="api-dialog-heading"><div><h2 id="apiSettingsTitle">生图 API 设置</h2><p>连接支持图片参考的生图服务，继续使用人物、姿势与服装参考。</p></div><button class="api-close" id="closeApiSettings" type="button" aria-label="关闭 API 设置"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+  <form id="apiSettingsForm">
+    <label class="api-label" for="imageApiProtocol">接口协议</label>
+    <select id="imageApiProtocol"><option value="images-multipart">Images 图片编辑 · multipart</option><option value="qwen-json">Qwen 图片接口 · JSON</option><option value="lk-media">LK tt-image-2.5 · 异步任务</option></select>
+    <p class="api-hint" id="imageApiProtocolHint">适用于支持 /images/edits 的服务；多张参考图按顺序通过 image[] 提交。</p>
+    <label class="api-label" for="imageApiEndpoint">接口地址</label>
+    <input id="imageApiEndpoint" type="url" required placeholder="https://你的服务地址/v1" autocomplete="off" spellcheck="false" aria-describedby="imageApiEndpointHint">
+    <p class="api-hint" id="imageApiEndpointHint">只填域名默认使用 /v1；也可填写服务商提供的基础地址或完整图片接口地址。</p>
+    <label class="api-label" for="imageApiModel">模型名称</label>
+    <input id="imageApiModel" type="text" required maxlength="200" placeholder="填写服务商支持的生图模型名称" autocomplete="off" spellcheck="false">
+    <label class="api-label" for="imageApiKey">API Key <span id="imageApiKeyState">尚未配置</span></label>
+    <input id="imageApiKey" type="password" autocomplete="new-password" spellcheck="false" placeholder="粘贴 API Key" aria-describedby="imageApiKeyHint">
+    <p class="api-hint" id="imageApiKeyHint">保存在本机 .local 文件夹。分享整合包时请排除此文件夹。</p>
+    <label class="api-clear-key" id="imageApiClearKeyField" hidden><input id="imageApiClearKey" type="checkbox">清除已保存的 API Key</label>
+    <label class="api-label" for="imageApiSizeMode">尺寸传递</label>
+    <select id="imageApiSizeMode"><option value="auto">服务商自动决定 · 推荐</option><option value="selected">使用创作台选择的尺寸</option></select>
+    <p class="api-hint">自动模式把所选比例写入提示词。指定尺寸需要模型支持 1024 × 1536、1536 × 1024 或 1024 × 1024。</p>
+    <div class="api-save-row"><button class="gen-primary" id="saveImageApi" type="submit">保存配置</button><span>保存配置后，点击“开始生成”调用 API。</span></div>
+    <p class="api-feedback" id="imageApiFeedback" role="status" aria-live="polite"></p>
+  </form>
+</dialog>

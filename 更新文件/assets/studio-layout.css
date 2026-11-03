@@ -1,0 +1,124 @@
+/* Compact desktop workspace. The reference and generation logic stays shared. */
+.studio-header{background:var(--surface);border-bottom:1px solid var(--line);overflow:visible}
+.studio-header::before{display:none}
+.studio-header .topbar{height:56px;min-height:56px;border:0;gap:20px}
+.creator-brand{display:flex;align-items:center;gap:22px;min-width:0}
+.creator-links{display:flex;align-items:center;gap:18px}
+.creator-links a{display:inline-flex;align-items:center;gap:5px;min-height:36px;color:var(--text-2);font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap}
+.creator-links a:hover{color:var(--accent-dark)}
+.artist-signature{position:relative;display:inline-flex;align-items:baseline;gap:8px;flex:none;padding:0 9px 4px 2px;color:#28252d;text-decoration:none;line-height:1;isolation:isolate}
+.signature-latin{font-family:"Segoe Script","Lucida Handwriting",cursive;font-size:27px;font-weight:600;letter-spacing:-1.8px;transform:rotate(-4deg) skewX(-5deg)}
+.signature-chinese{font-family:"STXingkai","KaiTi","FangSong",serif;font-size:26px;font-weight:500;letter-spacing:-2px;transform:rotate(-5deg)}
+.signature-flourish{position:absolute;left:0;bottom:-5px;width:100%;height:19px;color:#a05c50;pointer-events:none;z-index:-1}
+.source-links{display:flex;align-items:center;gap:25px}
+.source-links a{display:inline-flex;align-items:center;gap:7px;font-size:11px;color:var(--text-2);text-decoration:none;white-space:nowrap;min-height:36px}
+.source-links a:hover{color:var(--accent-dark)}
+.source-links a>span{font-size:14px;color:var(--text-3)}
+.generator{padding-block:10px 14px;scroll-margin-top:88px}
+.gen-heading{height:24px;min-height:24px;align-items:center;margin-bottom:8px;gap:12px}
+.gen-heading h2{font-size:15px;font-weight:650;line-height:24px;letter-spacing:.02em}
+.gen-model{padding:2px 7px;font-size:10px;font-weight:500;border-radius:5px}
+.gen-workspace{height:calc(100dvh - 112px);min-height:560px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);border-radius:12px}
+.gen-form{padding:14px 16px;display:flex;flex-direction:column;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
+.gen-sources{flex:none;gap:8px 12px;margin-bottom:8px}
+.gen-source{position:relative}
+.gen-label-row{min-height:20px;margin-bottom:4px;line-height:16px}
+.gen-label{font-size:11px;margin-bottom:4px}
+.gen-optional{font-size:10px;margin-left:3px}
+.gen-source-tools{gap:9px}
+.gen-text-button,.gen-text-link{font-size:11px}
+.gen-pose-preview,.gen-upload{height:clamp(82px,calc((100dvh - 570px)/2),244px);border-radius:8px}
+.gen-upload>span{gap:5px;padding:8px}
+.gen-upload strong,.gen-pose-empty{font-size:11px}
+.gen-upload small{font-size:9px}
+.gen-upload>span>svg,.gen-pose-empty>svg{width:22px;height:22px}
+.gen-source-caption{font-size:10px;line-height:14px;min-height:14px;max-height:14px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#selectedCostumeOriginal{position:absolute;right:6px;bottom:23px;font-size:10px;line-height:18px;padding:0 6px;background:#fffffff0;border:1px solid var(--line);border-radius:4px}
+.gen-reference-mode{flex:none;display:grid;grid-template-columns:auto minmax(150px,.9fr) minmax(0,1fr);align-items:center;gap:8px;padding:6px 9px;margin-bottom:7px;border-radius:7px;background:var(--surface-2)}
+.gen-reference-mode .gen-label{margin:0;white-space:nowrap;font-size:10px}
+.gen-reference-mode select{height:28px;min-height:28px;font-size:11px;padding:2px 26px 2px 8px}
+.gen-reference-mode .gen-field-hint{min-width:0;margin:0;font-size:10px;line-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gen-selected-description{flex:none;border:0;padding:0;margin:0 0 7px}
+.gen-selected-description>summary{width:fit-content;color:var(--text-2);font-size:11px;line-height:19px;cursor:pointer}
+.gen-selected-description>summary>span{font-size:10px;color:var(--text-3);margin-left:7px}
+.gen-selected-description[open]{padding:7px 9px;background:var(--surface-2);border:1px solid var(--line);border-radius:7px;max-height:155px;overflow-y:auto}
+.gen-selected-description .pose-description-heading{margin:6px 0}
+.gen-selected-description .pose-description-text{font-size:11px;line-height:1.65}
+.gen-selected-description .pose-description-view,.gen-selected-description .gen-auto-hint{font-size:10px;line-height:1.6;margin-top:5px}
+.gen-form>label[for=generationPrompt]{flex:none;line-height:16px;font-size:11px;margin-bottom:4px}
+.gen-form textarea{flex:none;min-height:48px;height:54px;max-height:180px;padding:7px 10px;border-radius:7px;font-size:12px;line-height:1.5}
+#promptHint{flex:none;min-width:0;margin:4px 0 6px;font-size:10px;line-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gen-options{flex:none;gap:5px 14px;margin-bottom:6px;line-height:16px}
+.gen-options label{font-size:10px;gap:4px}
+.gen-options input{width:13px;height:13px}
+.gen-advanced{flex:none;padding-top:6px}
+.gen-advanced>summary{font-size:11px;line-height:18px;font-weight:500}
+.gen-settings-grid{gap:8px;margin-top:8px}
+.gen-settings-grid :is(input,select){height:32px;font-size:11px;border-radius:6px}
+.gen-settings-grid .gen-label{font-size:10px}
+.gen-lora{margin-top:10px;padding-top:8px}
+.gen-connection{flex:none;margin-top:8px;font-size:10px;line-height:16px;gap:6px}
+.gen-connection-dot{width:6px;height:6px;margin-top:5px}
+.gen-connection .gen-text-button{font-size:10px}
+.gen-start-help{flex:none;margin:5px 0 0;font-size:10px;line-height:1.5;padding:6px 8px}
+.gen-submit-row{flex:none;position:sticky;bottom:-1px;z-index:2;align-items:center;flex-direction:row;gap:10px;margin-top:auto;padding-top:8px;background:var(--surface)}
+.gen-primary{flex:none;min-height:36px;height:36px;width:auto;border-radius:7px;padding-inline:17px;font-size:12px}
+.gen-submit-row>span{min-width:0;font-size:10px;line-height:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gen-form-error{flex:none;font-size:11px;margin-top:6px}
+.gen-output{padding:14px 16px;min-height:0;overflow:hidden}
+.gen-output-heading{margin-bottom:8px;min-height:18px}
+.gen-output-heading h3{font-size:12px;line-height:18px}
+.gen-output-heading>span{font-size:10px}
+.gen-result-stage{flex:1 1 0;min-height:0;border-radius:8px;isolation:isolate}
+.gen-result-stage>img{width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain}
+.gen-result-empty{padding:18px;gap:7px}
+.gen-result-empty strong{font-size:12px;font-weight:500}
+.gen-result-empty span{font-size:11px}
+.gen-result-actions{flex:none;min-height:30px;margin-top:8px;gap:12px}
+.gen-result-actions .gen-secondary{min-height:30px;padding:0 11px;font-size:11px;border-radius:6px}
+.gen-job-status{flex:none;min-height:14px;font-size:10px;line-height:14px;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gen-job-status.is-error{white-space:normal;max-height:65px;overflow-y:auto}
+.gen-save-hint{flex:none;font-size:10px;line-height:14px;margin-top:4px;margin-bottom:0}
+.gen-save-hint code{font-size:10px}
+@media(min-width:901px) and (max-height:800px){.gen-form,.gen-output{padding-block:12px}}
+@media(max-width:1100px) and (min-width:901px){.gen-reference-mode{grid-template-columns:auto minmax(150px,1fr)}.gen-reference-mode .gen-field-hint{display:none}.gen-options{gap:4px 9px}.gen-submit-row>span{font-size:9px}}
+@media(max-width:900px){
+  .studio-header .topbar{height:56px;min-height:56px}
+  .gen-workspace{height:auto;min-height:0;grid-template-columns:1fr}
+  .gen-form{overflow:visible;padding:14px 16px}
+  .gen-pose-preview,.gen-upload{height:clamp(110px,24vw,170px)}
+  .gen-reference-mode{grid-template-columns:auto minmax(150px,1fr)}
+  .gen-reference-mode .gen-field-hint{grid-column:1/-1;white-space:normal;font-size:10px}
+  .gen-output{padding:14px 16px;border-left:0;border-top:1px solid var(--line)}
+  .gen-result-stage{flex:none;height:clamp(300px,70dvh,620px);min-height:300px}
+  .gen-submit-row{position:static;margin-top:5px}
+  .gen-options{display:flex;flex-wrap:wrap}
+  .gen-source-caption{font-size:10px}
+  .gen-heading h2{font-size:15px}
+}
+@media(max-width:560px){
+  .studio-header .topbar{height:52px;min-height:52px;gap:12px}
+  .artist-signature{gap:5px;padding-left:0;padding-right:4px}
+  .signature-latin{font-size:22px;letter-spacing:-1.6px}
+  .signature-chinese{font-size:21px;letter-spacing:-2px}
+  .signature-flourish{bottom:-6px;height:16px}
+  .source-links{gap:12px}
+  .source-links a{font-size:10px;gap:2px}
+  .source-links a>span{font-size:11px}
+  .gen-sources{gap:8px 10px}
+  .gen-label-row .gen-label{font-size:10px}
+  .gen-optional{font-size:9px;margin-left:2px}
+  .gen-text-link,.gen-text-button{font-size:10px}
+  .gen-source-tools{gap:6px}
+  .gen-form,.gen-output{padding-inline:12px}
+  .gen-options label{font-size:10px}
+  .gen-form textarea{height:65px}
+}
+@media(max-width:360px){.source-links{gap:8px}.source-links a{font-size:9px}.signature-latin{font-size:20px}.signature-chinese{font-size:20px}.gen-submit-row>span{font-size:9px}}
+@media(max-width:680px){
+  .studio-header .topbar{height:auto;min-height:56px;flex-wrap:wrap;gap:0 16px;padding-block:7px}
+  .creator-brand{flex:1 0 100%;justify-content:space-between;gap:12px}
+  .creator-links{gap:16px}
+  .creator-links a{min-height:36px}
+  .source-links{margin-left:auto;gap:18px}
+}

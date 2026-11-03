@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="theme-color" content="#ffffff"><script src="/assets/appearance.js"></script><title>安装与模式 · 杏野创作台</title><link rel="stylesheet" href="/assets/gallery.css"><link rel="stylesheet" href="/assets/studio-layout.css"><link rel="stylesheet" href="/assets/setup.css"><link rel="stylesheet" href="/assets/appearance.css"><script defer src="/assets/setup.js"></script></head>
+<body>
+<header class="setup-header"><div class="setup-header-inner"><a class="artist-signature" href="/" aria-label="杏野创作台"><span class="signature-latin">ANNO_Yoo</span><span class="signature-chinese">杏野</span><svg class="signature-flourish" viewBox="0 0 280 22" fill="none" aria-hidden="true"><path d="M5 16C58 5 135 6 173 10c21 2 43 2 62-1 18-3 29-6 35-4 5 2-7 7-16 8M143 6l-9 13" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></svg></a><div class="header-tools"><nav class="creator-links" aria-label="作者主页"><a href="https://space.bilibili.com/13412148?spm_id_from=333.337.search-card.all.click" target="_blank" rel="noopener noreferrer">B站主页</a><a href="https://www.douyin.com/user/MS4wLjABAAAA2OkzUY8ng2DVJsc6pzKdsvy2q_vf_jz0MXSXTYiDMWg?from_tab_name=main" target="_blank" rel="noopener noreferrer">抖音主页</a></nav><div class="appearance-controls" id="appearanceControls"></div></div></div></header>
+<main class="setup-shell">
+  <div class="setup-intro"><div><h1>选择你的使用方式</h1><p>人物、姿势和服装图库通用。按所选方式准备环境，设置完成后直接进入创作台。</p></div><a id="returnToStudio" href="/" hidden>返回创作台</a></div>
+  <form id="setupForm" class="setup-layout">
+    <fieldset class="setup-modes"><legend>安装方式</legend>
+      <label><input type="radio" name="studioMode" value="api"><span><strong>外接生图 API</strong><small>使用服务商的模型，无需安装 Python 或下载模型。</small></span></label>
+      <label><input type="radio" name="studioMode" value="builtin" checked><span><strong>内置 WebUI</strong><small>整合包附带运行环境，准备 Qwen 模型后即可使用。</small></span></label>
+      <label><input type="radio" name="studioMode" value="external"><span><strong>接入已有 ComfyUI</strong><small>沿用已有服务，或使用现有安装目录和 Python 启动。</small></span></label>
+      <p>选择会保存在本机。之后可通过创作台的“安装与模式”重新设置。</p>
+    </fieldset>
+    <div class="setup-detail">
+      <section id="setupApi" aria-labelledby="setupApiTitle" hidden>
+        <h2 id="setupApiTitle">连接生图 API</h2><p class="setup-description">选择支持多图编辑的模型，人物、姿势和服装会一起提交。</p>
+        <label class="setup-label" for="setupApiProtocol">接口协议</label><select id="setupApiProtocol"><option value="images-multipart">Images 图片编辑 · multipart</option><option value="qwen-json">Qwen 图片接口 · JSON</option><option value="lk-media">LK tt-image-2.5 · 异步任务</option></select>
+        <label class="setup-label" for="setupApiEndpoint">接口地址</label><input id="setupApiEndpoint" type="url" placeholder="https://你的服务地址/v1" autocomplete="off" spellcheck="false"><p class="setup-hint" id="setupApiEndpointHint">可填写基础地址或完整的 /images/edits 地址。</p>
+        <label class="setup-label" for="setupApiModel">模型名称</label><input id="setupApiModel" type="text" maxlength="200" placeholder="填写服务商支持的模型名称" autocomplete="off" spellcheck="false">
+        <label class="setup-label" for="setupApiKey">API Key <span id="setupApiKeyState">尚未配置</span></label><input id="setupApiKey" type="password" autocomplete="new-password" spellcheck="false" placeholder="粘贴 API Key"><p class="setup-hint">密钥保存在本机。保存设置不会发送生图请求。</p>
+      </section>
+      <section id="setupBuiltin" aria-labelledby="setupBuiltinTitle">
+        <h2 id="setupBuiltinTitle">准备本地生图</h2><p class="setup-description">只需环境和模型两项。已下载的文件放好后，直接检测即可。</p>
+        <div class="setup-preparation-step"><h3><span>01</span><strong id="setupRuntimeTitle">内置运行环境</strong></h3>
+        <div class="setup-runtime-summary"><strong id="runtimeStateLabel">正在检查运行环境…</strong><p id="runtimePackageDetail"></p></div>
+        <div id="runtimeInstallOptions">
+          <div class="setup-runtime-actions"><button class="setup-secondary" type="button" id="downloadRuntime">自动下载</button><a class="setup-secondary" id="runtimeQuarkLink" target="_blank" rel="noopener noreferrer" hidden>手动下载 ↗</a></div>
+          <p class="setup-hint" id="runtimeDownloadHint">正在读取下载信息…</p>
+          <details class="setup-offline" id="runtimeOfflineOptions"><summary>使用离线 ZIP 安装</summary><div id="detectedRuntimeArchive" class="setup-detected" hidden><p id="detectedRuntimeArchiveName"></p><button class="setup-secondary" type="button" id="installDetectedRuntime">安装已找到的 ZIP</button></div><label class="setup-label" for="runtimeArchivePath">环境压缩包的完整路径</label><input id="runtimeArchivePath" type="text" placeholder="例如 D:\下载\PoseAtlas-Runtime-Windows-NVIDIA-1.0.0.zip" spellcheck="false"><div class="setup-runtime-actions"><button class="setup-secondary" type="button" id="importRuntimePath">从路径安装</button><label class="setup-file-button setup-secondary" for="runtimeArchiveFile">选择压缩包<input id="runtimeArchiveFile" type="file" accept=".zip"></label></div></details>
+        </div>
+        <div id="runtimeTask" class="setup-transfer" hidden><label for="runtimeProgress" id="runtimeTaskLabel">准备中</label><progress id="runtimeProgress" max="1"></progress><div class="setup-transfer-detail"><p id="runtimeTaskDetail"></p><button type="button" id="cancelRuntime" class="setup-text-button">取消安装</button></div></div>
+        <p class="setup-hint">手动下载后，将 runtime 文件夹与“启动创作台.cmd”放在同一级。</p><div class="setup-placement"><code id="setupRuntimeDirectory"></code><button class="setup-text-button" id="detectPlacedRuntime" type="button">检测环境</button></div>
+        </div><div class="setup-preparation-step"><h3><span>02</span> 下载 Qwen 模型</h3><p class="setup-hint">自动下载会放好文件；手动下载后，将 models 文件夹与“启动创作台.cmd”放在同一级，进入创作台点击检测。</p><div class="setup-runtime-actions"><button class="setup-secondary" id="setupAutomaticModels" type="button">自动下载</button><a class="setup-secondary" id="setupManualModels" target="_blank" rel="noopener noreferrer" hidden>手动下载 ↗</a></div><code class="setup-model-directory" id="setupModelDirectory"></code></div>
+        <p class="setup-hint setup-runtime-note">Windows x64 / NVIDIA，显卡驱动需支持 CUDA 13。</p>
+      </section>
+      <section id="setupExternal" aria-labelledby="setupExternalTitle" hidden>
+        <h2 id="setupExternalTitle">沿用已有 ComfyUI</h2><p class="setup-description">可以连接已运行的服务，也可以让创作台使用你现有的环境启动。</p>
+        <fieldset class="setup-connection-type"><legend>接入方式</legend><label><input type="radio" name="externalConnection" value="connect" checked>连接服务地址</label><label><input type="radio" name="externalConnection" value="launch">从安装目录启动</label></fieldset>
+        <div id="externalUrlFields"><label class="setup-label" for="setupComfyUrl">ComfyUI 地址</label><input id="setupComfyUrl" type="url" value="http://127.0.0.1:8188" spellcheck="false"><p class="setup-hint">支持本机和局域网地址，请保持该 ComfyUI 运行。</p></div>
+        <div id="externalPathFields" hidden><label class="setup-label" for="setupComfyDirectory">ComfyUI 安装目录</label><div class="setup-input-action"><input id="setupComfyDirectory" type="text" placeholder="例如 D:\ComfyUI 或 D:\ComfyUI\ComfyUI" spellcheck="false"><button type="button" id="detectComfy" class="setup-secondary">识别环境</button></div><label class="setup-label" for="setupPythonExecutable">Python 路径</label><input id="setupPythonExecutable" type="text" placeholder="识别后自动填写，也可手动指定 python.exe" spellcheck="false"><p class="setup-hint" id="detectComfyFeedback">使用该 ComfyUI 对应的 Python 环境。</p></div>
+        <p class="setup-hint setup-external-note">当前工作流需要 Qwen-Image 2.1 标准版模型及对应节点，模型沿用已有 ComfyUI 的配置。</p>
+      </section>
+      <div class="setup-footer"><button class="setup-primary" id="finishSetup" type="submit" disabled>保存并进入创作台</button><span id="setupNextHint">正在读取配置…</span></div>
+      <p class="setup-feedback" id="setupFeedback" role="status" aria-live="polite"></p>
+    </div>
+  </form>
+</main>
+</body></html>

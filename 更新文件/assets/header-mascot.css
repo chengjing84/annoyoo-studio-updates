@@ -1,0 +1,20 @@
+/* 优优 has a little space of its own between the signature and source links. */
+.studio-header .topbar{height:64px;min-height:64px}
+.studio-header .creator-brand,.studio-header .source-links{flex-shrink:0}
+.yoyo-playground{--yoyo-size:64px;position:relative;flex:1 1 0;min-width:0;height:64px;align-self:center;isolation:isolate;overflow:hidden;opacity:0;transition:opacity .4s ease}
+.yoyo-playground.is-ready{opacity:1}
+.yoyo-ground{position:absolute;left:8px;right:8px;bottom:7px;height:1px;background:linear-gradient(90deg,transparent,rgba(198,161,108,.25) 20%,rgba(198,161,108,.25) 80%,transparent);pointer-events:none}
+.yoyo-mascot{position:absolute;left:0;bottom:0;width:var(--yoyo-size);height:var(--yoyo-size);padding:0;border:0;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;will-change:transform;outline-offset:-3px;border-radius:14px}
+.yoyo-mascot:focus-visible{outline:2px solid #c78b9a;outline-offset:-3px;background:#f8ebee70}
+.yoyo-sprite{position:absolute;inset:0;display:block;background-image:url('yoyo-sprites.png');background-repeat:no-repeat;background-size:400% 400%;background-position:0 66.666667%;transform:scaleX(var(--yoyo-facing,1));pointer-events:none}
+.yoyo-shadow{position:absolute;left:29%;right:29%;bottom:6px;height:3px;border-radius:50%;background:#aa8b7140;filter:blur(1.2px);pointer-events:none}
+.yoyo-playground[data-state=sleeping] .yoyo-shadow{left:17%;right:17%}
+.yoyo-sleep-marks{position:absolute;bottom:35px;left:0;pointer-events:none;opacity:0;transition:opacity .6s ease;will-change:transform}
+.yoyo-playground[data-state=sleeping] .yoyo-sleep-marks{opacity:.65}
+.yoyo-sleep-marks i{position:absolute;bottom:0;left:0;width:3px;height:3px;border-radius:50%;background:#d7a2b0;animation:yoyo-dream 2.8s ease-out infinite}
+.yoyo-sleep-marks i:nth-child(2){animation-delay:.9s}.yoyo-sleep-marks i:nth-child(3){animation-delay:1.8s}
+@keyframes yoyo-dream{0%{opacity:0;transform:translate(0,0) scale(.5)}25%{opacity:.8}100%{opacity:0;transform:translate(8px,-15px) scale(1.2)}}
+@media(min-width:901px){.gen-workspace{height:calc(100dvh - 120px)}}
+@media(max-width:900px) and (min-width:681px){.yoyo-playground{--yoyo-size:56px;height:56px}.studio-header .topbar{height:56px;min-height:56px}}
+@media(max-width:680px){.studio-header .topbar{height:auto;min-height:56px}.yoyo-playground{--yoyo-size:52px;height:48px;flex:1 1 0;margin-top:-3px}.yoyo-mascot{bottom:-3px}.yoyo-ground{bottom:2px}.yoyo-shadow{bottom:6px}.yoyo-sleep-marks{bottom:29px}}
+@media(prefers-reduced-motion:reduce){.yoyo-playground,.yoyo-sleep-marks{transition:none}.yoyo-sleep-marks i{animation:none}.yoyo-sleep-marks i:first-child{opacity:.6}}

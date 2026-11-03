@@ -1,0 +1,31 @@
+.library-nav{display:flex;align-items:stretch;gap:24px}
+.library-nav>.line-tabs{flex:1;min-width:0;margin:0;align-items:center}
+.library-switch{display:flex;gap:6px;flex:none;margin-left:auto;padding-left:20px;border-left:1px solid var(--line-strong)}
+.library-tab{min-width:104px;display:flex;flex-direction:column;justify-content:center;gap:2px;text-align:left;border:1px solid var(--line-strong);border-radius:11px;padding:8px 15px;background:var(--surface);cursor:pointer;transition:background .16s,border-color .16s}
+.library-tab>span{font-size:13px;font-weight:750}.library-tab small{font-size:10px;color:var(--text-3);white-space:nowrap}
+.library-tab[aria-selected=true]{background:var(--text);color:var(--surface);border-color:var(--text)}
+.library-tab[aria-selected=true] small{color:#d1d6df}.library-tab:hover:not([aria-selected=true]){border-color:var(--accent);color:var(--accent-dark)}
+#costumeTabs .line-tab{min-width:72px}
+.costume-filter-panel{grid-template-columns:minmax(180px,.9fr) minmax(240px,1fr) minmax(220px,1.8fr) auto}
+.costume-reference-note{align-self:center;justify-self:end;padding-top:15px;font-size:12px;color:var(--text-3)}
+.wardrobe-card{position:relative;display:flex;flex-direction:column;min-width:0;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--surface);transition:border-color .18s,box-shadow .18s}
+.wardrobe-card:hover{border-color:var(--line-strong);box-shadow:var(--shadow)}
+.wardrobe-preview{display:block;position:relative;padding:0;border:0;background:var(--surface-2);width:100%;cursor:zoom-in;overflow:hidden}
+.wardrobe-preview img{display:block;width:100%;aspect-ratio:3/4;object-fit:contain}
+.wardrobe-card .image-top{pointer-events:none}.wardrobe-preview .pose-no{font-size:10px}
+.wardrobe-body{padding:15px 15px 12px;flex:1;min-width:0}
+.wardrobe-title{display:block;width:100%;font:700 14px/1.65 var(--font);text-align:left;color:var(--text);padding:0;border:0;background:none;cursor:zoom-in}
+.wardrobe-description{font-size:12px;line-height:1.7;color:var(--text-2);margin:8px 0 0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.wardrobe-meta{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:7px 0 0;color:var(--text-3);font-size:11px}
+.wardrobe-select{margin:0 15px 15px;min-height:36px;padding:7px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface);font:600 12px var(--font);color:var(--accent-dark);cursor:pointer}
+.wardrobe-select:hover{border-color:var(--accent);background:var(--accent-soft)}
+.wardrobe-card.is-selected{border-color:var(--accent)}
+.wardrobe-card.is-selected .wardrobe-select{border-color:var(--accent);background:var(--accent-soft)}
+.wardrobe-grid.is-compact .wardrobe-description{display:none}
+.costume-library-credit{font-size:11px;color:var(--text-3);line-height:1.8;margin-top:28px;padding-top:18px;border-top:1px solid var(--line)}
+.costume-library-credit a{text-underline-offset:3px}
+.costume-english{font-size:12px;line-height:1.8;color:var(--text-2);margin:0;overflow-wrap:anywhere;user-select:text}
+#costumeViewer .viewer-nav{font:36px/1 var(--font)}
+#costumeViewerClose{font:26px/1 var(--font)}
+@media(max-width:1100px){.library-nav{gap:14px}.library-switch{padding-left:14px}.library-tab{min-width:85px;padding-inline:12px}.costume-reference-note{display:none}.costume-filter-panel{grid-template-columns:1fr 1fr auto}}
+@media(max-width:680px){.library-nav{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}.library-switch{grid-column:2;grid-row:1;padding-left:8px;gap:4px}.library-tab{min-width:58px;padding:5px 8px;border-radius:9px}.library-tab>span{font-size:12px}.library-tab small{font-size:8px}.library-nav>.line-tabs{grid-column:1;grid-row:1;overflow-x:auto}.library-nav .line-tab{flex-shrink:0}.costume-filter-panel{grid-template-columns:1fr}.costume-reference-note{display:none}.wardrobe-card{border-radius:12px}.wardrobe-body{padding:10px}.wardrobe-title{font-size:12px;line-height:1.5}.wardrobe-description{font-size:11px;-webkit-line-clamp:2;margin-top:6px}.wardrobe-meta{font-size:9px}.wardrobe-select{margin:0 10px 10px;min-height:36px;font-size:11px}.wardrobe-preview .pose-no{font-size:8px}.costume-library-credit{font-size:10px}}

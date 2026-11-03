@@ -1,0 +1,7 @@
+.gen-heading-actions{display:flex;align-items:center;gap:12px;min-width:0}
+html[data-studio-mode] .engine-modes{display:none}
+#openStudioSetup{font-size:12px;color:var(--text-2);text-decoration:none;white-space:nowrap;min-height:36px;display:inline-flex;align-items:center}
+#openStudioSetup:hover{color:var(--accent-dark)}
+#openStudioSetup:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:3px}
+#openStudioSetup[aria-disabled=true]{opacity:.5;cursor:default}
+@media(max-width:560px){.gen-heading{height:auto;min-height:30px;align-items:flex-start}.gen-heading-actions{gap:6px;flex-wrap:wrap;justify-content:flex-end}.gen-heading-actions .gen-model{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "repository": "Comfy-Org/Qwen-Image-2.1",
+  "revision": "aacf31a6d48e707f352ecba714cee0680da3479b",
+  "defaultDownloadSource": "mirror",
+  "quarkUrl": "https://pan.quark.cn/s/4085c5633eb8",
+  "quarkCode": "",
+  "models": [
+    { "id": "diffusion", "name": "Qwen-Image 2.1 主模型 · INT8", "file": "diffusion_models/qwen2.1/qwen_image_2.1_int8_convrot.safetensors", "bytes": 7256783064, "sha256": "cb74113cb03faecd79611b01fd7fd642f0aa60d6f0b95086abee214d75eaa57d", "url": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/aacf31a6d48e707f352ecba714cee0680da3479b/diffusion_models/qwen_image_2.1_int8_convrot.safetensors" },
+    { "id": "textEncoder", "name": "Qwen3-VL 8B 文本编码器 · FP8", "file": "text_encoders/qwen2.1/qwen3vl_8b_fp8_scaled.safetensors", "bytes": 10588637512, "sha256": "4ba424cf62e51392e4d1a39933e803706f4e823c1065f36aaf149c6453f66bcd", "repository": "Comfy-Org/Qwen3-VL", "revision": "3388a7eba0975235cdcfab53e2584662d25ee377", "url": "https://huggingface.co/Comfy-Org/Qwen3-VL/resolve/3388a7eba0975235cdcfab53e2584662d25ee377/text_encoders/qwen3vl_8b_fp8_scaled.safetensors" },
+    { "id": "vae", "name": "Qwen-Image 2.1 VAE · BF16", "file": "vae/qwen2.1/qwen_image_2.1_vae_bf16.safetensors", "bytes": 675509688, "sha256": "bb21f7473051e1ac368515dd3f2e15cd44d7a11748ee8823e1ddca3e4876b7c9", "url": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/aacf31a6d48e707f352ecba714cee0680da3479b/vae/qwen_image_2.1_vae_bf16.safetensors" }
+  ]
+}
