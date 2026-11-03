@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
-  "version": "1.2.0",
+  "version": "1.2.1",
   "minimumFullVersion": "1.2.0",
   "requiredRuntimePackageId": "poseatlas-runtime-windows-nvidia-1.0.0",
-  "builtAt": "2026-11-03T15:44:10+08:00",
+  "builtAt": "2026-11-03T16:48:42+08:00",
   "mode": "cumulative-file-overlay",
   "payloadDirectory": "更新文件",
   "preservedDirectories": [
@@ -15,7 +15,7 @@
     "thumbs",
     "costume"
   ],
-  "totalBytes": 17847334,
+  "totalBytes": 17865954,
   "files": [
     {
       "path": "index.html",
@@ -56,6 +56,11 @@
       "path": "修复运行库.cmd",
       "bytes": 232,
       "sha256": "2ccf1bf1b7358ca8005a7ba8d23fea3c746af7898c1f93028baca82eef9ba167"
+    },
+    {
+      "path": "更新创作台.cmd",
+      "bytes": 165,
+      "sha256": "e5a9ce67c7c2521060d41f6414f40495c0e7b274c56ab7b438508fe68217c1a1"
     },
     {
       "path": "assets/gallery.css",
@@ -333,6 +338,11 @@
       "sha256": "6d7c6ebe678f1b75ffdfbf3d39aaa8ecfefab08b9895e2fe27e625c193d2b738"
     },
     {
+      "path": "scripts/update-studio.ps1",
+      "bytes": 16535,
+      "sha256": "dc6a58260f6cc951df2c7c7104407ff6aa7fca92a8264613910fdc2f3ba8320e"
+    },
+    {
       "path": "config/edition.json",
       "bytes": 21,
       "sha256": "e058e99686e608ed79c4a83f69b742143083261966748b12f90188879e01cf2b"
@@ -350,7 +360,7 @@
     {
       "path": "config/distribution.json",
       "bytes": 287,
-      "sha256": "ea7a149158d2d0e82375bf670195375f08b1ca2cfcfa6ebbd1a21b86a44fcd67"
+      "sha256": "ff6bac3a95a9d03914b8354519a14415a8335d6f32b7e12550401357653df19a"
     },
     {
       "path": "docs/preview.jpg",
@@ -364,8 +374,8 @@
     },
     {
       "path": "docs/统一版使用说明.md",
-      "bytes": 7350,
-      "sha256": "6a92ec057d8aea045e597cd61f5f1e45799dfe452d4362b9bcec9a6a09a158a2"
+      "bytes": 8013,
+      "sha256": "9cb894a5b0891e5a3463a38c1856fee4c555b07dea59f888d9e41f7a4464e666"
     },
     {
       "path": "docs/API版使用说明.md",
@@ -374,18 +384,18 @@
     },
     {
       "path": "docs/原项目说明.md",
-      "bytes": 29928,
-      "sha256": "4e8523dcccde5125b2af5f971bec0b7c0b884c2ad8cfefc8f3aae6c867531ae4"
+      "bytes": 30305,
+      "sha256": "9ea23eaa66d37d57c4f700cc6752a35cdad4a5c1bc62c65ff54551f85662c497"
     },
     {
       "path": "README.md",
-      "bytes": 7350,
-      "sha256": "6a92ec057d8aea045e597cd61f5f1e45799dfe452d4362b9bcec9a6a09a158a2"
+      "bytes": 8013,
+      "sha256": "9cb894a5b0891e5a3463a38c1856fee4c555b07dea59f888d9e41f7a4464e666"
     },
     {
       "path": "使用说明.txt",
-      "bytes": 955,
-      "sha256": "953cd22607266edee462c27f024a041e4bf22c4eb472ddbe0d6b5011c7da220b"
+      "bytes": 1172,
+      "sha256": "f2ab469d15396476e3f344d8e5a02641f45a60b357adec22e689d6ad9624e98f"
     }
   ]
 }
