@@ -15,7 +15,7 @@
     "thumbs",
     "costume"
   ],
-  "totalBytes": 17866395,
+  "totalBytes": 17869361,
   "files": [
     {
       "path": "index.html",
@@ -359,8 +359,8 @@
     },
     {
       "path": "config/distribution.json",
-      "bytes": 287,
-      "sha256": "6f02e8b2ce612c2ecc74a3814351ad87c7b3bf311272fa482ab5a9944f956ca5"
+      "bytes": 299,
+      "sha256": "063af4976d91781f25744ba9b3ce34b9ae1e9e1532890ae90b50732ab1f49708"
     },
     {
       "path": "docs/preview.jpg",
@@ -374,8 +374,8 @@
     },
     {
       "path": "docs/统一版使用说明.md",
-      "bytes": 8060,
-      "sha256": "d484d73e9a0e86658e4f2e79f78e3db2170d91b219500d68919f526aa92d4624"
+      "bytes": 9531,
+      "sha256": "77c032f6902964fc27635d1dbc0c94f12cfb64fceee912b98898b832fce55b82"
     },
     {
       "path": "docs/API版使用说明.md",
@@ -384,13 +384,13 @@
     },
     {
       "path": "docs/原项目说明.md",
-      "bytes": 30337,
-      "sha256": "7faeb1a8d6a69f7dd5fa9e089df05b31d207323a573fca9a34cd09e72b66608b"
+      "bytes": 30349,
+      "sha256": "8ff914fc0c43a791a4d2d808782b98e4155eee356de11de534f4a08e31051df3"
     },
     {
       "path": "README.md",
-      "bytes": 8060,
-      "sha256": "d484d73e9a0e86658e4f2e79f78e3db2170d91b219500d68919f526aa92d4624"
+      "bytes": 9531,
+      "sha256": "77c032f6902964fc27635d1dbc0c94f12cfb64fceee912b98898b832fce55b82"
     },
     {
       "path": "使用说明.txt",
