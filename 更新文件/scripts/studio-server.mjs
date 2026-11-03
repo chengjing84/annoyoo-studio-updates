@@ -10,6 +10,7 @@ import { Transform } from 'node:stream';
 import { randomUUID } from 'node:crypto';
 import { ImageApiSettings, publicSettings } from './image-api.mjs';
 import { normalizeComfyUrl, inspectExistingComfy } from './local-engine.mjs';
+import { isAllowedLocalOrigin } from './local-request.mjs';
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -207,7 +208,7 @@ export async function createStudioServer({ root = process.env.GALLERY_ROOT || pa
     let ownsSwitch = false;
     try {
       if (![new URL(baseUrl).host, `localhost:${port}`].includes(req.headers.host)) throw new StudioError(403, '仅允许从本机访问');
-      if (req.headers.origin && !origins.has(req.headers.origin)) throw new StudioError(403, '请从本机创作台使用此功能');
+      if (!isAllowedLocalOrigin(req, origins)) throw new StudioError(403, '请从本机创作台使用此功能');
       res.setHeader('X-Content-Type-Options', 'nosniff');
       if (req.headers.origin) { res.setHeader('Access-Control-Allow-Origin', req.headers.origin); res.setHeader('Vary', 'Origin'); }
       if (req.method === 'OPTIONS') { res.writeHead(204, { 'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' }); res.end(); return; }

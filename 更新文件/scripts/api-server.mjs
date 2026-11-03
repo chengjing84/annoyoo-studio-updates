@@ -8,6 +8,7 @@ import { validateOptions, referencePlan } from './qwen-workflow.mjs';
 import { createApiPromptRecord } from './api-prompt.mjs';
 import { submitMediaTask, queryMediaTask } from './media-api.mjs';
 import { ImageApiSettings, ImageApiError as ApiError, imageType, generateImage, resultBytes, safeProviderMessage } from './image-api.mjs';
+import { isAllowedLocalOrigin } from './local-request.mjs';
 
 const scriptRoot = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(process.env.GALLERY_ROOT || path.join(scriptRoot, '..'));
@@ -180,7 +181,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (![`${'127.0.0.1'}:${port}`, `localhost:${port}`].includes(req.headers.host)) throw new ApiError(403, '仅允许从本机访问');
     const origin = req.headers.origin;
-    if (origin && !allowedOrigins.has(origin)) throw new ApiError(403, '请从本机创作台页面使用此功能');
+    if (!isAllowedLocalOrigin(req, allowedOrigins)) throw new ApiError(403, '请从本机创作台页面使用此功能');
     if (origin) { res.setHeader('Access-Control-Allow-Origin', origin); res.setHeader('Vary', 'Origin'); }
     res.setHeader('X-Content-Type-Options', 'nosniff');
     if (req.method === 'OPTIONS') { res.writeHead(204, { 'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' }); res.end(); return; }

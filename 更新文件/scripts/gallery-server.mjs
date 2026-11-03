@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { randomUUID, createHash } from 'node:crypto';
 import { selectModels, selectLoras, validateOptions, buildWorkflow, createPromptRecord } from './qwen-workflow.mjs';
 import { LocalEngine, detectExistingComfy } from './local-engine.mjs';
+import { isAllowedLocalOrigin } from './local-request.mjs';
 
 const scriptRoot = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(process.env.GALLERY_ROOT || path.join(scriptRoot, '..'));
@@ -288,7 +289,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (![`${'127.0.0.1'}:${port}`, `localhost:${port}`].includes(req.headers.host)) throw new ApiError(403, '仅允许从本机访问');
     const origin = req.headers.origin;
-    if (origin && !allowedOrigins.has(origin)) throw new ApiError(403, '请从本机画廊页面使用生成功能');
+    if (!isAllowedLocalOrigin(req, allowedOrigins)) throw new ApiError(403, '请从本机画廊页面使用生成功能');
     if (origin) { res.setHeader('Access-Control-Allow-Origin', origin); res.setHeader('Vary', 'Origin'); }
     res.setHeader('X-Content-Type-Options', 'nosniff');
     if (req.method === 'OPTIONS') {
