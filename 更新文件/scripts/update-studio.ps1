@@ -177,8 +177,23 @@ try {
         if (-not $health -and (Get-Process -Id $instance.pid -ErrorAction SilentlyContinue)) { throw '程序仍在运行但无法确认服务身份，请先使用“停止创作台.cmd”关闭后再更新。' }
         if ($health) {
             if ($health.projectRoot -ne $RootPath -or $health.pid -ne $instance.pid) { throw '服务身份不匹配，请先手动关闭此整合包。' }
-            if (-not (Invoke-RestMethod -Uri "$base/api/idle" -TimeoutSec 5).idle) { throw '当前有生成或下载任务，请完成后再更新。' }
-            $shutdown = Invoke-RestMethod -Uri "$base/api/shutdown" -Method Post -ContentType 'application/json' -Body '{}' -TimeoutSec 30
+            $idleConfirmed = $false
+            $legacySetupConflict = $false
+            try { $idleConfirmed = [bool](Invoke-RestMethod -Uri "$base/api/idle" -TimeoutSec 5).idle }
+            catch {
+                # Old studio gateways proxy /api/idle and return 409 before a
+                # mode has been selected. Their shutdown endpoint still checks
+                # all runtime/download work itself before allowing a stop.
+                $response = $_.Exception.Response
+                $unconfiguredStudio = $health.edition -eq 'studio' -and ($health.PSObject.Properties.Name -contains 'mode') -and $null -eq $health.mode
+                if ($unconfiguredStudio -and $response -and [int]$response.StatusCode -eq 409) {
+                    $legacySetupConflict = $true
+                    Write-Host '旧版程序停在首次安装页，正在通过安全关闭接口确认状态…'
+                } else { throw '无法确认程序是否空闲，请先运行“停止创作台.cmd”，确认停止后再重新更新。原程序尚未修改。' }
+            }
+            if (-not $idleConfirmed -and -not $legacySetupConflict) { throw '当前有生成或下载任务，请完成后再更新。' }
+            try { $shutdown = Invoke-RestMethod -Uri "$base/api/shutdown" -Method Post -ContentType 'application/json' -Body '{}' -TimeoutSec 30 }
+            catch { throw '程序尚未安全停止，可能仍有生成、下载或安装任务。请等待任务结束，再运行“停止创作台.cmd”后重新更新。原程序尚未修改。' }
             if (-not $shutdown.stopping) { throw '服务未确认关闭，更新尚未应用。' }
             $stoppedService = $true
             for ($wait = 0; $wait -lt 100; $wait++) { if (-not (Get-Process -Id $health.pid -ErrorAction SilentlyContinue)) { break }; Start-Sleep -Milliseconds 200 }

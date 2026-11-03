@@ -222,6 +222,9 @@ export async function createStudioServer({ root = process.env.GALLERY_ROOT || pa
         const { detectExistingComfy } = await import('./local-engine.mjs'); json(res, 200, await detectExistingComfy(root, body.directory || '')); return;
       }
       if (switching) throw new StudioError(409, '安装方式正在切换，请稍后重试');
+      if (req.method === 'GET' && url.pathname === '/api/idle') {
+        await checkIdle(); checkRuntimeIdle(); json(res, 200, { idle: true }); return;
+      }
       if (req.method === 'POST' && url.pathname === '/api/setup') {
         switching = true; ownsSwitch = true;
         json(res, 200, await configure(await readJson(req))); return;
