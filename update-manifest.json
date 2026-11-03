@@ -15,7 +15,7 @@
     "thumbs",
     "costume"
   ],
-  "totalBytes": 17869361,
+  "totalBytes": 17871452,
   "files": [
     {
       "path": "index.html",
@@ -374,8 +374,8 @@
     },
     {
       "path": "docs/统一版使用说明.md",
-      "bytes": 9531,
-      "sha256": "77c032f6902964fc27635d1dbc0c94f12cfb64fceee912b98898b832fce55b82"
+      "bytes": 10415,
+      "sha256": "58caa25ca07d1dc02fd4af7be51f583ed31917b642e717a2462b6b8e43ffff0e"
     },
     {
       "path": "docs/API版使用说明.md",
@@ -389,13 +389,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 9531,
-      "sha256": "77c032f6902964fc27635d1dbc0c94f12cfb64fceee912b98898b832fce55b82"
+      "bytes": 10415,
+      "sha256": "58caa25ca07d1dc02fd4af7be51f583ed31917b642e717a2462b6b8e43ffff0e"
     },
     {
       "path": "使用说明.txt",
-      "bytes": 1178,
-      "sha256": "7f358fad1287a8a3b16a742e78d7a3a39eea5caa5e8b11eb3a0789d5281a349c"
+      "bytes": 1501,
+      "sha256": "c5ae7001008cdc8c4e059b3009e43f724f069cf9a646b4758f77ea4e8f60faed"
     }
   ]
 }
