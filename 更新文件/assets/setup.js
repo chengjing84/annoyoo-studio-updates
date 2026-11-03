@@ -54,6 +54,7 @@
     $('runtimeQuarkLink').hidden = !quark;
     if (quark && /^https:\/\//.test(quark)) $('runtimeQuarkLink').href = quark;
     else $('runtimeQuarkLink').hidden = true;
+    $('runtimeQuarkLink').textContent = /^https:\/\/(?:pan|drive)\.quark\.cn\//.test(quark || '') ? '夸克网盘 ↗' : '手动下载 ↗';
     $('detectedRuntimeArchive').hidden = !runtime.localArchive || !!runtime.available;
     $('detectedRuntimeArchiveName').textContent = runtime.localArchive ? `已找到离线环境包：${runtime.localArchive}` : '';
     const task = runtime.task; $('runtimeTask').hidden = !task && !uploadBusy;

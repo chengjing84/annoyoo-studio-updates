@@ -67,6 +67,7 @@
       : '下载地址待发布。已有环境包可放到指定位置后检测。';
     $('engineRuntimeDirectory').textContent = runtime?.runtimeRoot || `${state.engine.projectRoot || state.modelRoot.replace(/[\\/]models$/, '')}/runtime`;
     link('engineRuntimeManual', runtime?.bundled ? runtime.fullPackageUrl : runtime?.manualUrl || runtime?.quarkUrl || runtime?.downloadUrl);
+    $('engineRuntimeManual').textContent = /^https:\/\/(?:pan|drive)\.quark\.cn\//.test($('engineRuntimeManual').href || '') ? '夸克网盘 ↗' : '手动下载 ↗';
     const task = runtime?.task;
     $('engineRuntimeTransfer').hidden = !task || ['completed', 'cancelled'].includes(task.status);
     if (task) {

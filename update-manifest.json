@@ -15,12 +15,12 @@
     "thumbs",
     "costume"
   ],
-  "totalBytes": 17865954,
+  "totalBytes": 17866395,
   "files": [
     {
       "path": "index.html",
       "bytes": 40209,
-      "sha256": "d65ffc10f62e908be32d5972e64507b43162c19f17f9b67bcee4f3245b962b5d"
+      "sha256": "96632b406eda792e35875ce75066927cb27b3a0fabf990e7a544ffaaf84a1f33"
     },
     {
       "path": "LICENSE",
@@ -104,8 +104,8 @@
     },
     {
       "path": "assets/local-engine.js",
-      "bytes": 17110,
-      "sha256": "2b2197f4f587d805c5153c69163b6f3d6f699e5ff4b0ad1fb05d81b4f26ff5ce"
+      "bytes": 17278,
+      "sha256": "fda80817c87c5d71fa347fd31e8c39239054ee4007af15a3e88be623953d78ee"
     },
     {
       "path": "assets/local-engine.css",
@@ -165,12 +165,12 @@
     {
       "path": "assets/setup.html",
       "bytes": 9298,
-      "sha256": "40fa640712ac90947e3d140287758d43a851ab6268a9c2c4c3b3639f1e748cc9"
+      "sha256": "432fae0914180f5cd325a89509317df28fc81ee4c78201c6b5e98a8d1e0bffbc"
     },
     {
       "path": "assets/setup.js",
-      "bytes": 15229,
-      "sha256": "98f0354edf129c3127457ca5dff5cd7d19b493c6873be52bd56400e0eb016892"
+      "bytes": 15370,
+      "sha256": "5c0c47f525c5f6df904232b1c5aaa708569448b42442c9a55ffa06ff19500c14"
     },
     {
       "path": "assets/setup.css",
@@ -360,7 +360,7 @@
     {
       "path": "config/distribution.json",
       "bytes": 287,
-      "sha256": "ff6bac3a95a9d03914b8354519a14415a8335d6f32b7e12550401357653df19a"
+      "sha256": "6f02e8b2ce612c2ecc74a3814351ad87c7b3bf311272fa482ab5a9944f956ca5"
     },
     {
       "path": "docs/preview.jpg",
@@ -374,8 +374,8 @@
     },
     {
       "path": "docs/统一版使用说明.md",
-      "bytes": 8013,
-      "sha256": "9cb894a5b0891e5a3463a38c1856fee4c555b07dea59f888d9e41f7a4464e666"
+      "bytes": 8060,
+      "sha256": "d484d73e9a0e86658e4f2e79f78e3db2170d91b219500d68919f526aa92d4624"
     },
     {
       "path": "docs/API版使用说明.md",
@@ -384,18 +384,18 @@
     },
     {
       "path": "docs/原项目说明.md",
-      "bytes": 30305,
-      "sha256": "9ea23eaa66d37d57c4f700cc6752a35cdad4a5c1bc62c65ff54551f85662c497"
+      "bytes": 30337,
+      "sha256": "7faeb1a8d6a69f7dd5fa9e089df05b31d207323a573fca9a34cd09e72b66608b"
     },
     {
       "path": "README.md",
-      "bytes": 8013,
-      "sha256": "9cb894a5b0891e5a3463a38c1856fee4c555b07dea59f888d9e41f7a4464e666"
+      "bytes": 8060,
+      "sha256": "d484d73e9a0e86658e4f2e79f78e3db2170d91b219500d68919f526aa92d4624"
     },
     {
       "path": "使用说明.txt",
-      "bytes": 1172,
-      "sha256": "f2ab469d15396476e3f344d8e5a02641f45a60b357adec22e689d6ad9624e98f"
+      "bytes": 1178,
+      "sha256": "7f358fad1287a8a3b16a742e78d7a3a39eea5caa5e8b11eb3a0789d5281a349c"
     }
   ]
 }
