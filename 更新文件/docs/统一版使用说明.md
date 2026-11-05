@@ -12,7 +12,7 @@
 
 完整整合包附带程序、姿势与服装图库、Node.js、Python、PyTorch 和 ComfyUI，**不包含生图模型**。首次启动可选择使用方式，人物、姿势、服装与场景参考功能共用。浏览图库和生成图片统一使用 **启动创作台.cmd**。
 
-下载：[完整整合包 · 夸克网盘（不含模型）](https://pan.quark.cn/s/42a1959a13de) · [Qwen 模型三件套 · 夸克网盘](https://pan.quark.cn/s/80d2ba176a41)。
+下载：[完整整合包 · 夸克网盘（不含模型）](https://pan.quark.cn/s/bf5f6d71666f) · [Qwen 模型三件套 · 夸克网盘](https://pan.quark.cn/s/80d2ba176a41)。
 
 > [!IMPORTANT]
 > ### 整合包解压密码：`xingye`

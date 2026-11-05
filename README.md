@@ -16,7 +16,7 @@
 
 ## 下载
 
-- **[完整整合包 · 夸克网盘（不含模型）](https://pan.quark.cn/s/42a1959a13de)**：首次使用下载这个，包含程序、完整图库、Node.js、Python、PyTorch、ComfyUI 和 VC++ 运行库安装器，**不含生图模型**。
+- **[完整整合包 · 夸克网盘（不含模型）](https://pan.quark.cn/s/bf5f6d71666f)**：首次使用下载这个，包含程序、完整图库、Node.js、Python、PyTorch、ComfyUI 和 VC++ 运行库安装器，**不含生图模型**。
 - **[Qwen 模型三件套 · 夸克网盘](https://pan.quark.cn/s/80d2ba176a41)**：内置本地生图需要另行准备模型；已有 ComfyUI 可以沿用原模型。
 - [GitHub 程序更新仓库](https://github.com/chengjing84/annoyoo-studio-updates)：为已有整合包提供程序更新，不包含完整运行环境和图库。
 

@@ -380,7 +380,7 @@
     {
       "path": "config/distribution.json",
       "bytes": 331,
-      "sha256": "54d12f79fac786865e3427ad78046bd7a934806491bd485ad568fc15718218bb"
+      "sha256": "d1b3e7df417b6490e34917f1a44d5df675da8eeb7a50299fb06453aea8ed0fea"
     },
     {
       "path": "docs/preview.jpg",
@@ -395,7 +395,7 @@
     {
       "path": "docs/统一版使用说明.md",
       "bytes": 12988,
-      "sha256": "9c80e8b09eeea4a346cfc1f6c1d068ec1ee368213eaf8cb9ad7dcdbbdaa540ff"
+      "sha256": "058f9b25d7eb151df0e5e1560877844c30349deff0823fc89b8637f01a54374d"
     },
     {
       "path": "docs/API版使用说明.md",
@@ -410,17 +410,17 @@
     {
       "path": "docs/原项目说明.md",
       "bytes": 31570,
-      "sha256": "48fa6854f92830a13f130583848b2a1a0c9b0db36afce656c0aec20a1d3f627c"
+      "sha256": "28a02a4a2fe6a6d8d249ad85788083195c8b4887e8ef21b83a23eb54c9aa90af"
     },
     {
       "path": "README.md",
       "bytes": 12988,
-      "sha256": "9c80e8b09eeea4a346cfc1f6c1d068ec1ee368213eaf8cb9ad7dcdbbdaa540ff"
+      "sha256": "058f9b25d7eb151df0e5e1560877844c30349deff0823fc89b8637f01a54374d"
     },
     {
       "path": "使用说明.txt",
       "bytes": 1891,
-      "sha256": "efb23807c7a2df5042fd192da1eaefbf7a2e1a95b874bbf2caf608c6596d5aa2"
+      "sha256": "be7cad66ee8efcac086c21eb32ee196a60b5f269c3d41cc9bbe572abba24caf2"
     }
   ]
 }
