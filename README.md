@@ -1,4 +1,4 @@
-# 杏野创作台
+# 模特大师
 
 把人物参考、姿势参考、服装和场景放在同一个本地创作台里，选择参考、补充画面要求，再生成图片。
 
@@ -21,6 +21,24 @@
 - [GitHub 程序更新仓库](https://github.com/chengjing84/annoyoo-studio-updates)：为已有整合包提供程序更新，不包含完整运行环境和图库。
 
 **整合包解压密码：`xingye`。** 这是压缩包解压密码，不是网盘提取码。下载后先完整解压，再运行启动脚本。
+
+## 界面预览
+
+创作界面：组合姿势与服装参考，补充画面要求。
+
+![模特大师创作界面](docs/screenshots/studio.jpg)
+
+模型与生成设置：选择模型、调整画面尺寸和采样参数，按需添加 LoRA。
+
+<img src="docs/screenshots/model-settings.jpg" alt="模特大师模型与生成设置：30 步、CFG 1、1K 竖图，默认不使用 LoRA" width="760">
+
+姿势参考库：按体系、动作和视角筛选，直接选用。
+
+![模特大师姿势参考库](docs/screenshots/pose-gallery.jpg)
+
+服装参考库：按分类浏览、搜索并选用服装。
+
+![模特大师服装参考库](docs/screenshots/costume-gallery.jpg)
 
 ## 开始使用
 
