@@ -66,5 +66,13 @@ body.engine-open{overflow:hidden}
 .engine-toolbar .gen-secondary{font:600 12px var(--font);min-height:34px;border-radius:6px;cursor:pointer}
 .engine-ready-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:20px}
 .engine-ready-footer p{margin:0;font-size:12px;line-height:1.7;color:var(--text-2)}
+.engine-dir-row{display:block;padding:12px 0;border-bottom:1px solid var(--line)}
+.engine-dir-row .engine-dir-path{display:block;width:100%;margin-bottom:10px;padding:8px 10px;font:12px/1.5 ui-monospace,Consolas,monospace;border:1px solid var(--line);border-radius:6px;background:var(--bg-1);color:var(--text-1);box-sizing:border-box}
+.engine-dir-row .engine-dir-footer{display:block;line-height:24px;overflow:hidden}
+.engine-dir-row .engine-dir-kinds{display:inline;vertical-align:middle}
+.engine-dir-row .engine-dir-kinds label{display:inline;margin-right:18px;font-size:13px;color:var(--text-2);cursor:pointer;white-space:nowrap}
+.engine-dir-row .engine-dir-kinds label:last-child{margin-right:0}
+.engine-dir-row .engine-dir-kinds input[type=checkbox]{width:auto;height:auto;margin-right:5px;vertical-align:middle;accent-color:var(--accent)}
+.engine-dir-row .gen-text-button{float:right;font-size:11px;white-space:nowrap;padding:3px 8px;min-height:24px;border-radius:4px;margin-left:14px}
 @media(max-width:560px){.engine-dialog{padding:20px;width:calc(100vw - 20px);max-height:94dvh}.engine-dialog-heading h2{font-size:20px}.engine-step-heading{gap:9px}.engine-step-heading h3{font-size:14px}.engine-step-state{font-size:11px}.engine-step-description,.engine-step-actions,.engine-location,.engine-options,.engine-download-status{margin-left:0}.engine-prep-step{margin-bottom:20px;padding-bottom:20px}.engine-modes{grid-template-columns:1fr}.engine-ready-footer{align-items:flex-start}.engine-ready-footer p{max-width:145px}.gen-heading-actions{gap:8px}.gen-heading-actions>#openLocalEngine{font-size:11px}}
 @media(prefers-reduced-motion:reduce){.engine-options summary::before,.engine-connection-options summary::before{transition:none}}

@@ -39,7 +39,7 @@
         <fieldset class="setup-connection-type"><legend>接入方式</legend><label><input type="radio" name="externalConnection" value="connect" checked>连接服务地址</label><label><input type="radio" name="externalConnection" value="launch">从安装目录启动</label></fieldset>
         <div id="externalUrlFields"><label class="setup-label" for="setupComfyUrl">ComfyUI 地址</label><input id="setupComfyUrl" type="url" value="http://127.0.0.1:8188" spellcheck="false"><p class="setup-hint">支持本机和局域网地址，请保持该 ComfyUI 运行。</p></div>
         <div id="externalPathFields" hidden><label class="setup-label" for="setupComfyDirectory">ComfyUI 安装目录</label><div class="setup-input-action"><input id="setupComfyDirectory" type="text" placeholder="例如 D:\ComfyUI 或 D:\ComfyUI\ComfyUI" spellcheck="false"><button type="button" id="detectComfy" class="setup-secondary">识别环境</button></div><label class="setup-label" for="setupPythonExecutable">Python 路径</label><input id="setupPythonExecutable" type="text" placeholder="识别后自动填写，也可手动指定 python.exe" spellcheck="false"><p class="setup-hint" id="detectComfyFeedback">使用该 ComfyUI 对应的 Python 环境。</p></div>
-        <p class="setup-hint setup-external-note">当前工作流需要 Qwen-Image 2.1 标准版模型及对应节点，模型沿用已有 ComfyUI 的配置。</p>
+        <p class="setup-hint setup-external-note">请确保已安装 Qwen-Image 2.1 家族的 UNet / CLIP / VAE 三件套，以及对应节点。</p>
       </section>
       <div class="setup-footer"><button class="setup-primary" id="finishSetup" type="submit" disabled>保存并进入创作台</button><span id="setupNextHint">正在读取配置…</span></div>
       <p class="setup-feedback" id="setupFeedback" role="status" aria-live="polite"></p>

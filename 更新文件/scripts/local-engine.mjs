@@ -11,6 +11,38 @@ import { setTimeout as delay } from 'node:timers/promises';
 
 const catalogPath = fileURLToPath(new URL('../config/model-catalog.json', import.meta.url));
 const exists = async file => !!(await stat(file).catch(() => null));
+
+// YAML 和目录扫描共用同一组根目录、分类映射。
+export function normalizeModelDirectoryConfigs(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw.map(item => {
+    if (typeof item === 'string') return { path: item.trim(), kinds: [] };
+    if (item && typeof item.path === 'string') return { path: item.path.trim(), kinds: Array.isArray(item.kinds) ? item.kinds : [] };
+    return null;
+  }).filter(item => item?.path);
+}
+
+export function modelDirectoryMappings(configs) {
+  const aliases = { diffusion: 'diffusion_models', diffusion_models: 'diffusion_models', unet: 'diffusion_models', textEncoder: 'text_encoders', text_encoders: 'text_encoders', text_encoder: 'text_encoders', vae: 'vae', loras: 'loras' };
+  const leaves = { diffusion_models: 'diffusion_models', unet: 'diffusion_models', text_encoders: 'text_encoders', text_encoder: 'text_encoders', vae: 'vae', loras: 'loras' };
+  return normalizeModelDirectoryConfigs(configs).map(cfg => {
+    const name = path.basename(cfg.path).toLowerCase();
+    const parent = path.basename(path.dirname(cfg.path)).toLowerCase();
+    const leaf = leaves[name] || leaves[parent];
+    const requested = [...new Set(cfg.kinds.map(k => aliases[k]).filter(Boolean))];
+    const mappings = leaf
+      ? { [leaf]: '.' }
+      : Object.fromEntries((requested.length ? requested : ['diffusion_models', 'text_encoders', 'vae', 'loras']).map(kind => [kind, kind === 'diffusion_models' ? ['diffusion_models', 'unet'] : kind === 'text_encoders' ? ['text_encoders', 'text_encoder'] : [kind]]));
+    return { path: cfg.path, mappings };
+  });
+}
+
+export function buildModelPathsYaml(configs) {
+  return modelDirectoryMappings(configs).map((cfg, index) => {
+    const mappings = Object.entries(cfg.mappings).map(([kind, dirs]) => `  ${kind}: ${JSON.stringify(Array.isArray(dirs) ? dirs.join('\n') : dirs)}`).join('\n');
+    return `pose_atlas_${index}:\n  base_path: ${JSON.stringify(cfg.path.replaceAll('\\', '/'))}\n${mappings}\n`;
+  }).join('\n');
+}
 const DOWNLOAD_SOURCES = [
   { id: 'mirror', name: '国内镜像 · HF-Mirror' },
   { id: 'official', name: 'Hugging Face 官方' }
@@ -128,9 +160,13 @@ export class LocalEngine {
   async configure(body) {
     if (!body || !['external', 'builtin'].includes(body.mode)) throw new Error('请选择内置或已有 ComfyUI');
     if (this.child && body.mode !== this.settings.mode) throw new Error('请先停止本程序启动的 ComfyUI，再切换连接方式');
-    const directories = body.modelDirectories ?? this.settings.modelDirectories;
-    if (!Array.isArray(directories) || directories.length > 8 || directories.some(item => typeof item !== 'string' || !path.isAbsolute(item))) throw new Error('额外模型目录必须是本机绝对路径，每行一个，最多 8 个');
-    for (const directory of directories) if (!(await stat(directory).catch(() => null))?.isDirectory()) throw new Error(`模型目录不存在：${directory}`);
+    const rawDirectories = body.modelDirectories ?? this.settings.modelDirectories;
+    const directories = normalizeModelDirectoryConfigs(rawDirectories);
+    if (!Array.isArray(rawDirectories) || directories.length !== rawDirectories.length || directories.length > 8) throw new Error('模型目录格式不正确，最多添加 8 个目录');
+    for (const d of directories) {
+      if (!path.isAbsolute(d.path)) throw new Error(`模型目录必须是本机绝对路径：${d.path}`);
+      if (!(await stat(d.path).catch(() => null))?.isDirectory()) throw new Error(`模型目录不存在：${d.path}`);
+    }
     if (this.child && JSON.stringify(directories) !== JSON.stringify(this.settings.modelDirectories)) throw new Error('修改模型目录前请先停止内置 ComfyUI');
     let comfyDirectory = body.comfyDirectory ?? this.settings.comfyDirectory ?? '';
     let pythonExecutable = body.pythonExecutable ?? (body.comfyDirectory !== undefined && body.comfyDirectory !== this.settings.comfyDirectory ? '' : this.settings.pythonExecutable ?? '');
@@ -179,8 +215,7 @@ export class LocalEngine {
     await mkdir(path.join(this.local, 'comfy-output'), { recursive: true });
     await mkdir(path.join(this.local, 'comfy-input'), { recursive: true });
     await mkdir(path.join(this.local, 'comfy-temp'), { recursive: true });
-    const roots = [this.modelRoot, ...this.settings.modelDirectories];
-    const yaml = roots.map((directory, index) => `pose_atlas_${index}:\n  base_path: ${JSON.stringify(directory.replaceAll('\\', '/'))}\n  diffusion_models: diffusion_models\n  text_encoders: text_encoders\n  vae: vae\n  loras: loras\n`).join('\n');
+    const yaml = buildModelPathsYaml([{ path: this.modelRoot, kinds: [] }, ...this.settings.modelDirectories]);
     const config = path.join(this.local, 'comfy-model-paths.yaml');
     await writeFile(config, yaml);
     const log = await open(path.join(this.local, 'comfyui.log'), 'a');
@@ -212,7 +247,7 @@ export class LocalEngine {
       '--output-directory', path.join(this.local, 'comfy-output'), '--input-directory', path.join(this.local, 'comfy-input'),
       '--temp-directory', path.join(this.local, 'comfy-temp'), '--user-directory', path.join(this.local, 'comfy-user')];
     if (this.settings.modelDirectories.length) {
-      const yaml = this.settings.modelDirectories.map((directory, index) => `pose_atlas_${index}:\n  base_path: ${JSON.stringify(directory.replaceAll('\\', '/'))}\n  diffusion_models: diffusion_models\n  text_encoders: text_encoders\n  vae: vae\n  loras: loras\n`).join('\n');
+      const yaml = buildModelPathsYaml(this.settings.modelDirectories);
       const config = path.join(this.local, 'comfy-existing-model-paths.yaml');
       await writeFile(config, yaml); args.push('--extra-model-paths-config', config);
     }
@@ -245,8 +280,15 @@ export class LocalEngine {
   }
   async locateModel(model) {
     const paths = [model.target];
-    for (const directory of this.settings.modelDirectories) {
-      paths.push(path.join(directory, model.file), path.join(directory, model.file.split('/')[0], path.basename(model.file)));
+    for (const entry of normalizeModelDirectoryConfigs(this.settings.modelDirectories)) {
+      const kind = model.file.split('/')[0];
+      for (const cfg of modelDirectoryMappings([entry])) {
+        const roots = cfg.mappings[kind];
+        for (const relative of roots ? Array.isArray(roots) ? roots : [roots] : []) {
+          const searchRoot = path.resolve(cfg.path, relative);
+          paths.push(path.join(searchRoot, ...model.file.split('/').slice(1)), path.join(searchRoot, path.basename(model.file)));
+        }
+      }
     }
     let incomplete = null;
     for (const filename of [...new Set(paths)]) {

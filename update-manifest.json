@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
-  "version": "1.2.4",
+  "version": "1.2.5",
   "minimumFullVersion": "1.2.0",
   "requiredRuntimePackageId": "poseatlas-runtime-windows-nvidia-1.0.0",
-  "builtAt": "2026-11-05T11:19:41+08:00",
+  "builtAt": "2026-11-05T11:30:40+08:00",
   "mode": "cumulative-file-overlay",
   "payloadDirectory": "更新文件",
   "preservedDirectories": [
@@ -15,12 +15,12 @@
     "thumbs",
     "costume"
   ],
-  "totalBytes": 17881091,
+  "totalBytes": 17975288,
   "files": [
     {
       "path": "index.html",
-      "bytes": 40317,
-      "sha256": "2ddc736bd75b116e03d48064aa88d69ce6145b20557d0c48f17fb01fb1b44444"
+      "bytes": 41146,
+      "sha256": "bae2a98a2a02172777912bdea0701335933220047edbd2588d4c174813a27ebe"
     },
     {
       "path": "LICENSE",
@@ -44,8 +44,8 @@
     },
     {
       "path": "启动创作台.cmd",
-      "bytes": 124,
-      "sha256": "10be1b5fd03b2eb3cb17f21b464e1dca93f1633757840620027b9f43a45449a1"
+      "bytes": 95,
+      "sha256": "fab7983115ef9b0cf90ef338da57bf713530e2e1d5b799331bdf06d154cad860"
     },
     {
       "path": "停止创作台.cmd",
@@ -89,28 +89,28 @@
     },
     {
       "path": "assets/studio-layout.css",
-      "bytes": 9736,
-      "sha256": "6f3782aebded664afe992f0a225c049e48470580b57e11014cf3578e7e22dcbe"
+      "bytes": 9814,
+      "sha256": "81e53267ab3ae583dd7041e33e1cb5ae425f268eb712758304814388c52c5b76"
     },
     {
       "path": "assets/generator.js",
-      "bytes": 41078,
-      "sha256": "470d446a206bc610640a7706ad264adc07a1fece7b219abb19412f271d42bc72"
+      "bytes": 56762,
+      "sha256": "02e97d9ed812a7ac9864a5f54ebb19e863868e3a54911f9d9e8dc9660ce3c9bd"
     },
     {
       "path": "assets/generator.css",
-      "bytes": 13474,
-      "sha256": "a4858f222c64985c50184c8bc59dd68ca458029facba00ddf2dd50604321913d"
+      "bytes": 15864,
+      "sha256": "a173dd59bb061ab4482e592fccbc42c0d0d35f164adce1f5c5e474703d805b7c"
     },
     {
       "path": "assets/local-engine.js",
-      "bytes": 17278,
-      "sha256": "fda80817c87c5d71fa347fd31e8c39239054ee4007af15a3e88be623953d78ee"
+      "bytes": 20005,
+      "sha256": "47e80e04c707b0e3a2bfa481cf0eda162032d8e7d4beab11a68b76e0341be895"
     },
     {
       "path": "assets/local-engine.css",
-      "bytes": 7734,
-      "sha256": "72041cd5d8ac66346a935577859f8f4fe162be9387859d3ad02bafa9edef3298"
+      "bytes": 8726,
+      "sha256": "456cf9e72e126e81144b0b0c7f87489e83246ec2990d5b935e59ac282f3a042a"
     },
     {
       "path": "assets/api-settings.js",
@@ -164,8 +164,8 @@
     },
     {
       "path": "assets/setup.html",
-      "bytes": 9298,
-      "sha256": "432fae0914180f5cd325a89509317df28fc81ee4c78201c6b5e98a8d1e0bffbc"
+      "bytes": 9284,
+      "sha256": "3eb263172d712d574608e6a0b14d9dfec45047faa2be57a4125f53fec0042262"
     },
     {
       "path": "assets/setup.js",
@@ -274,13 +274,13 @@
     },
     {
       "path": "scripts/studio-server.mjs",
-      "bytes": 23197,
-      "sha256": "15dba143b3217324780e8deafbd29de398d765e4010532c1daa851b690818d7a"
+      "bytes": 23999,
+      "sha256": "e14a6b6f8c6cf32b25ba30f32be68f9240fa5e917ef85f93120f59cf40af72e8"
     },
     {
       "path": "scripts/gallery-server.mjs",
-      "bytes": 27836,
-      "sha256": "8afd5ead0fbb1e54f1afa122c4b26832c2bfa2aedfe8747eef1955c5f68572d3"
+      "bytes": 34579,
+      "sha256": "546795afca7d659c385c4c157805d2e21ea3f7ce8d79daa2cb3b650ea8e29895"
     },
     {
       "path": "scripts/api-server.mjs",
@@ -309,13 +309,13 @@
     },
     {
       "path": "scripts/local-engine.mjs",
-      "bytes": 29319,
-      "sha256": "66322182cfcd8610e6c80d895a6cce27cae71cf86ad4eb2246279c3ec85cc12c"
+      "bytes": 31883,
+      "sha256": "9de29b3f1cfdb63d18f8dea8f02f4015d7d2ed2ab2834a3d4c6bc66c88b45859"
     },
     {
       "path": "scripts/qwen-workflow.mjs",
-      "bytes": 29550,
-      "sha256": "be775b8e47fe1baf82032e93731f85149b4807c00e230695f0651424be9e7d92"
+      "bytes": 35340,
+      "sha256": "56328a13da3ff0091dc0d3b21f44dc6e604bbb83db98c849fd3af78296f77308"
     },
     {
       "path": "scripts/model-download-worker.mjs",
@@ -348,6 +348,21 @@
       "sha256": "4e2dc2655d49530bf2b9e55a421c3f653fd58b07208b84e20feded1babd19307"
     },
     {
+      "path": "scripts/launch.mjs",
+      "bytes": 7941,
+      "sha256": "354fdb72bd8d7684c17d2041abef1f04692794984a33ba7dd658503e26f93d66"
+    },
+    {
+      "path": "scripts/model-catalog.mjs",
+      "bytes": 2673,
+      "sha256": "a8424c33f5fa5a457ec12787520350fc67e48f020e9422cff5259e773cce52ec"
+    },
+    {
+      "path": "scripts/model-presets.mjs",
+      "bytes": 6365,
+      "sha256": "f4e87567f95aa91553edc4f8473a9aa772df5f0e681619c1a3ac1db8e7c8ee4f"
+    },
+    {
       "path": "config/edition.json",
       "bytes": 21,
       "sha256": "e058e99686e608ed79c4a83f69b742143083261966748b12f90188879e01cf2b"
@@ -365,7 +380,7 @@
     {
       "path": "config/distribution.json",
       "bytes": 331,
-      "sha256": "25bf3cd93fe8df705f11dd57702e03f5aca067ed37c25bd76a78309c76ff5505"
+      "sha256": "54d12f79fac786865e3427ad78046bd7a934806491bd485ad568fc15718218bb"
     },
     {
       "path": "docs/preview.jpg",
@@ -379,13 +394,18 @@
     },
     {
       "path": "docs/统一版使用说明.md",
-      "bytes": 12115,
-      "sha256": "595e1573e3fc9b4a51e8452b38f712f35d0b27aabcfc682e752220450e8380fe"
+      "bytes": 12927,
+      "sha256": "8afc4033323c75c1610f5990de8f3fde0c6585f02301241c696216288b2e23e7"
     },
     {
       "path": "docs/API版使用说明.md",
       "bytes": 7601,
       "sha256": "8826060187f9c5b23ed18244dd32b7df82adb5003ae9c5eca4d0246031e41963"
+    },
+    {
+      "path": "docs/社区修改说明.html",
+      "bytes": 37038,
+      "sha256": "ab90487b300123e8ce0d3caec9223fed3b904985ec40121b2dc1f8fc7da1ee7c"
     },
     {
       "path": "docs/原项目说明.md",
@@ -394,13 +414,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 12115,
-      "sha256": "595e1573e3fc9b4a51e8452b38f712f35d0b27aabcfc682e752220450e8380fe"
+      "bytes": 12927,
+      "sha256": "8afc4033323c75c1610f5990de8f3fde0c6585f02301241c696216288b2e23e7"
     },
     {
       "path": "使用说明.txt",
       "bytes": 1891,
-      "sha256": "9ee1f39d2a139c5a524cae3a60c9f8da7e0421c5611c24f63305999bc2373fb5"
+      "sha256": "efb23807c7a2df5042fd192da1eaefbf7a2e1a95b874bbf2caf608c6596d5aa2"
     }
   ]
 }

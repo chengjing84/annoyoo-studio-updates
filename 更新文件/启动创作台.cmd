@@ -1,3 +1,3 @@
 @echo off
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\start-gallery.ps1" %*
+call "%~dp0runtime\node\node.exe" "%~dp0scripts\launch.mjs" %*
 if errorlevel 1 pause

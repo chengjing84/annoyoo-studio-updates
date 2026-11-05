@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#ffffff">
-<script src="assets/appearance.js"></script>
+<script src="assets/appearance.js?v=1.2.5"></script>
 <title>AI 姿势与服装参考库｜288 组姿势 · 1407 套服装</title>
 <meta name="description" content="AI 姿势参考库收录 288 组人体姿势、1439 张 900×1200 多角度参考图，覆盖全身、上半身与双人姿势。支持按体系、动作分类、正面 / 俯视 / 仰视等视角筛选，可在线对比并下载原图，适用于 AI 绘画、构图与动作参考。">
 <meta name="keywords" content="AI 姿势,姿势参考,人体姿势,绘画参考,构图参考,动作参考,POSE 图库,多角度姿势,素体线稿">
@@ -34,12 +34,12 @@
 <meta name="twitter:site" content="@anhao_ai">
 <meta name="twitter:creator" content="@anhao_ai">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23356c9e'/%3E%3Ccircle cx='16' cy='9' r='3.2' fill='white'/%3E%3Cpath d='M16 13.5c-2.5 0-4 1.6-4 3.8v3.8h2v7h4v-7h2v-3.8c0-2.2-1.5-3.8-4-3.8z' fill='white'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="assets/generator.css">
-<script defer src="assets/gallery-data.js"></script>
-<script defer src="assets/costume-gallery.js"></script>
-<script defer src="assets/generator.js?v=original-scroll-20261105"></script>
-<script defer src="assets/header-mascot.js?v=original-scroll-20261105"></script>
-<script defer src="assets/local-engine.js"></script>
+<link rel="stylesheet" href="assets/generator.css?v=1.2.5">
+<script defer src="assets/gallery-data.js?v=1.2.5"></script>
+<script defer src="assets/costume-gallery.js?v=1.2.5"></script>
+<script defer src="assets/generator.js?v=1.2.5"></script>
+<script defer src="assets/header-mascot.js?v=1.2.5"></script>
+<script defer src="assets/local-engine.js?v=1.2.5"></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -72,12 +72,12 @@
   ]
 }
 </script>
-<link rel="stylesheet" href="assets/gallery.css">
-<link rel="stylesheet" href="assets/costume-gallery.css">
-<link rel="stylesheet" href="assets/studio-layout.css?v=original-scroll-20261105">
-<link rel="stylesheet" href="assets/header-mascot.css?v=original-scroll-20261105">
-<link rel="stylesheet" href="assets/local-engine.css">
-<link rel="stylesheet" href="assets/appearance.css">
+<link rel="stylesheet" href="assets/gallery.css?v=1.2.5">
+<link rel="stylesheet" href="assets/costume-gallery.css?v=1.2.5">
+<link rel="stylesheet" href="assets/studio-layout.css?v=1.2.5">
+<link rel="stylesheet" href="assets/header-mascot.css?v=1.2.5">
+<link rel="stylesheet" href="assets/local-engine.css?v=1.2.5">
+<link rel="stylesheet" href="assets/appearance.css?v=1.2.5">
 </head>
 <body>
 <header class="site-header studio-header">
@@ -114,7 +114,7 @@
 <section class="shell generator" id="generator" aria-labelledby="generatorTitle">
   <div class="gen-heading">
     <div><h2 id="generatorTitle" tabindex="-1">角色创作台</h2></div>
-    <div class="gen-heading-actions"><button class="gen-text-button" id="openLocalEngine" type="button">本地引擎与模型</button><span class="gen-model">Qwen-Image 2.1</span></div>
+    <div class="gen-heading-actions"><button class="gen-text-button" id="openLocalEngine" type="button">设置</button><span class="gen-model">模特大师</span></div>
   </div>
   <div class="gen-workspace">
     <form class="gen-form" id="generationForm">
@@ -157,10 +157,10 @@
         <p class="gen-field-hint" id="promptPreviewStatus" role="status" aria-live="polite">选择参考和画面要求后预览，无需生成图片。</p>
         <pre id="promptPreviewText" hidden></pre>
       </details>
-      <details class="gen-advanced"><summary>生成设置</summary><div class="gen-settings-grid"><div><label class="gen-label" for="generationSize">画面尺寸</label><select id="generationSize"><option value="768x1024">竖图 · 768 × 1024</option><option value="1024x768">横图 · 1024 × 768</option><option value="1024x1024">方图 · 1024 × 1024</option><option value="512x672">小图预览 · 512 × 672</option></select></div><div><label class="gen-label" for="generationSteps">采样步数</label><input id="generationSteps" type="number" min="20" max="50" step="1" value="30"></div><div><label class="gen-label" for="generationSeed">随机种子</label><input id="generationSeed" type="number" min="-1" max="4294967295" step="1" value="-1"><small>-1 为每次随机</small></div></div>
-        <details class="gen-lora" id="loraSettings"><summary>LoRA <span id="loraSummary">默认不使用</span></summary><div class="gen-lora-toolbar"><label for="loraCount">接入数量<select id="loraCount"><option value="0">0 · 不使用</option><option value="1">1 个</option><option value="2">2 个</option><option value="3">3 个</option><option value="4">4 个</option><option value="5">5 个</option><option value="6">6 个</option><option value="7">7 个</option><option value="8">8 个</option></select></label><button class="gen-text-button" id="refreshLoras" type="button">刷新列表</button></div><p class="gen-field-hint" id="loraMessage" role="status" aria-live="polite">展开后读取本机 LoRA 列表。</p><div class="gen-lora-rows" id="loraRows"></div><p class="gen-field-hint">选择与 Qwen-Image 2.1 兼容的 LoRA，触发词可写在画面描述中。按列表顺序叠加，权重 0 不生效。</p></details>
+      <details class="gen-advanced"><summary>模型与生成设置</summary><div class="gen-model-picks"><div class="gen-pick-head"><label class="gen-label">模型</label><div class="gen-model-family-actions"><button class="gen-text-button" id="refreshModelCatalog" type="button" title="重新扫描模型目录">↻ 刷新</button><button class="gen-text-button" id="savePresetDefaults" type="button" title="将当前 UNet / CLIP / VAE / LoRA 保存为默认值">✓ 保存设置</button><button class="gen-text-button" id="resetPresetDefaults" type="button" title="恢复为自动匹配的默认值">↺ 恢复默认</button></div></div><div class="gen-picks-grid"><div><label class="gen-label" for="pickUNet">UNet / 主模型</label><select id="pickUNet"></select></div><div><label class="gen-label" for="pickCLIP">文本编码器</label><select id="pickCLIP"></select></div><div><label class="gen-label" for="pickVAE">VAE</label><select id="pickVAE"></select></div></div></div><div class="gen-settings-grid"><div><label class="gen-label" for="generationSize">画面尺寸</label><div class="gen-size-row"><select id="generationSize"><option value="832x1248" data-base-value="1248x832" data-base-ratio="3:2" data-tier="1K" selected>2:3 · 832 × 1248 · 1K</option><option value="2048x2048">1:1 · 2048 × 2048</option><option value="2400x1792">4:3 · 2400 × 1792</option><option value="2528x1696">3:2 · 2528 × 1696</option><option value="2752x1536">16:9 · 2752 × 1536</option></select><button class="gen-size-toggle" id="sizeOrientation" type="button" title="横向 / 竖向切换">↕ 竖向</button></div></div><div><label class="gen-label" for="generationSteps">采样步数</label><input id="generationSteps" type="number" min="1" max="80" step="1" value="30"></div><div><label class="gen-label" for="generationCfg">CFG Scale</label><input id="generationCfg" type="number" min="0" max="20" step="0.1" value="1"></div><div><label class="gen-label" for="generationSeed">随机种子</label><input id="generationSeed" type="number" min="-1" max="4294967295" step="1" value="-1"><small>-1 为每次随机</small></div></div>
+        <details class="gen-lora" id="loraSettings"><summary>LoRA <span id="loraSummary">默认不使用</span></summary><div class="gen-lora-toolbar"><p class="gen-field-hint" id="loraMessage" role="status" aria-live="polite">默认不使用 LoRA，需要时逐个添加。</p><button class="gen-text-button" id="refreshLoras" type="button">刷新列表</button></div><div class="gen-lora-rows" id="loraRows"></div><button class="gen-secondary gen-lora-add" id="addLora" type="button">添加 LoRA</button><p class="gen-field-hint">选择与当前模型兼容的 LoRA，按添加顺序叠加。权重 0 不生效，触发词可写在画面描述中。</p></details>
       </details>
-      <div class="gen-connection" id="generationConnection" role="status"><span class="gen-connection-dot" aria-hidden="true"></span><span id="connectionMessage">正在连接本机生成服务…</span><button class="gen-text-button" id="recheckConnection" type="button">重新检查</button></div>
+      <div class="gen-connection is-checking" id="generationConnection" role="status"><span class="gen-connection-dot" aria-hidden="true"></span><span id="connectionMessage">正在连接中……</span><button class="gen-text-button" id="recheckConnection" type="button">重新检查</button></div>
       <p class="gen-start-help" id="generationStartHelp" hidden>请双击项目目录中的“启动创作台.cmd”，再点击重新检查。</p>
       <div class="gen-submit-row"><button class="gen-primary" id="generateButton" type="submit" disabled><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m21 16-5-5-6 7-3-3-4 4"/></svg><span>开始生成</span></button><span id="generationSubmitHint">选择姿势或服装，开始创作</span></div>
       <p class="gen-form-error" id="generationFormError" role="alert" hidden></p>
@@ -267,19 +267,19 @@
       <div class="engine-download-status" id="engineRuntimeTransfer" hidden><label id="engineRuntimeTransferLabel" for="engineRuntimeProgress">正在准备环境</label><progress id="engineRuntimeProgress" max="1"></progress><p id="engineRuntimeTransferDetail"></p><button class="gen-text-button" id="engineCancelRuntime" type="button">取消下载</button></div>
     </section>
     <section class="engine-prep-step" aria-labelledby="modelManagerTitle">
-      <div class="engine-step-heading"><span class="engine-step-number" aria-hidden="true">02</span><h3 id="modelManagerTitle">下载 Qwen 模型</h3><span class="engine-step-state" id="engineModelsState" role="status">正在检测</span></div>
-      <p class="engine-step-description">自动下载会放到指定位置；手动下载后，将包内的 models 文件夹放到创作台根目录。</p>
-      <div class="engine-step-actions"><button class="engine-action engine-action-primary" id="downloadAllModels" type="button">自动下载</button><a class="engine-action" id="modelQuarkLink" target="_blank" rel="noopener noreferrer" aria-disabled="true">夸克网盘 ↗</a><button class="engine-check" id="detectLocalModels" type="button">检测模型</button></div>
+      <div class="engine-step-heading"><span class="engine-step-number" aria-hidden="true">02</span><h3 id="modelManagerTitle">模型目录（自动扫描）</h3><span class="engine-step-state" id="engineModelsState" role="status">正在扫描</span></div>
+      <p class="engine-step-description">自动扫描下方目录中的 diffusion / textEncoder / VAE / LoRA 文件。首次使用可自动下载三件套，或从网盘下载后放到 models 目录。</p>
+      <div class="engine-step-actions"><button class="engine-action engine-action-primary" id="downloadAllModels" type="button">自动下载三件套</button><button class="engine-action" id="detectLocalModels" type="button">检测模型</button><a class="engine-action" id="modelQuarkLink" target="_blank" rel="noopener noreferrer" aria-disabled="true">夸克网盘 ↗</a></div>
       <div class="engine-location"><code id="localModelDirectory"></code><button class="gen-text-button" id="copyModelDirectory" type="button">复制路径</button></div>
       <div class="engine-download-status" id="modelTransfer" hidden><label id="modelTransferLabel" for="modelTransferProgress">正在下载</label><progress id="modelTransferProgress" max="1" value="0"></progress><p id="modelTransferDetail"></p><button class="gen-text-button" id="cancelModelTransfer" type="button">取消任务</button></div>
-      <details class="engine-options" id="modelDownloadOptions"><summary>文件位置与下载选项</summary><p class="engine-hint" id="modelQuarkHint"></p><div id="localModelList"></div><label class="engine-label" for="modelDownloadSource">自动下载来源</label><select id="modelDownloadSource" aria-describedby="modelDownloadSourceHint"><option value="mirror">国内镜像 · HF-Mirror</option><option value="official">Hugging Face 官方</option></select><p class="engine-hint" id="modelDownloadSourceHint">默认使用国内镜像，下载中断后可继续。</p></details>
+      <details class="engine-options" id="modelDownloadOptions"><summary>下载选项</summary><p class="engine-hint" id="modelQuarkHint"></p><label class="engine-label" for="modelDownloadSource">自动下载来源</label><select id="modelDownloadSource" aria-describedby="modelDownloadSourceHint"><option value="mirror">国内镜像 · HF-Mirror</option><option value="official">Hugging Face 官方</option></select><p class="engine-hint" id="modelDownloadSourceHint">默认使用国内镜像，下载中断后可继续。</p></details>
     </section>
   </div>
   <p class="engine-feedback" id="localEngineFeedback" role="status" aria-live="polite"></p>
   <details class="engine-connection-options" id="engineConnectionOptions"><summary>连接设置与已有模型目录</summary><form id="localEngineForm">
     <fieldset class="engine-modes"><legend>生成方式</legend><label><input type="radio" name="localEngineMode" value="builtin"><span><strong>内置 ComfyUI</strong><small>使用随包环境，下载或导入模型后即可生成。</small></span></label><label><input type="radio" name="localEngineMode" value="external"><span><strong>已有 ComfyUI</strong><small>连接本机或局域网已有环境，沿用其模型与 LoRA。</small></span></label></fieldset>
-    <div id="externalEngineFields"><label class="engine-label" for="externalComfyUrl">ComfyUI 地址</label><input id="externalComfyUrl" type="url" placeholder="http://127.0.0.1:8188" required><p class="engine-hint">需要 Qwen-Image 2.1 标准版三件套及对应节点。保存后回到创作台检查连接。</p></div>
-    <div id="builtinEngineFields" hidden><label class="engine-label" for="extraModelDirectories">复用其他位置的模型 <span>可选，每行一个 models 根目录</span></label><textarea id="extraModelDirectories" rows="2" placeholder="例如 D:\ComfyUI\models"></textarea><p class="engine-hint">已有模型无需再下载。保存目录后，点击“检测模型”。</p></div>
+    <div id="externalEngineFields"><label class="engine-label" for="externalComfyUrl">ComfyUI 地址</label><input id="externalComfyUrl" type="url" placeholder="http://127.0.0.1:8188" required><p class="engine-hint">请确保已安装 Qwen-Image 2.1 家族的 UNet / CLIP / VAE 三件套及对应节点。保存后回到创作台检查连接。</p></div>
+        <div id="builtinEngineFields" hidden><label class="engine-label">模型目录 <span>添加任意目录，勾选里面包含的模型类型</span></label><div id="modelDirectoryList"></div><button type="button" id="addModelDirectory" class="gen-text-button">+ 添加目录</button><p class="engine-hint">支持任意路径：可以是 ComfyUI/models 根目录（勾选4种类型），也可以是单独的 diffusion_models 叶子目录。</p></div>
     <div class="engine-toolbar"><button class="gen-secondary" id="saveLocalEngine" type="submit">保存设置</button><button class="gen-text-button" id="stopBuiltinEngine" type="button" hidden>停止本地引擎</button><button class="gen-text-button" id="refreshLocalEngine" type="button">刷新状态</button></div>
   </form></details>
   <div class="engine-ready-footer"><p id="engineReadyHint">完成上面两项，即可开始生图。</p><button class="engine-action engine-action-primary" id="startBuiltinEngine" type="button" disabled>启动本地生图</button></div>
@@ -335,7 +335,7 @@
   <div class="info-content" id="infoContent"></div>
 </dialog>
 
-<script defer src="assets/pose-gallery.js"></script>
+<script defer src="assets/pose-gallery.js?v=1.2.5"></script>
 <script defer src="https://u.authbox.cn/script.js" data-website-id="cde8a23b-4bf6-4ded-8cd9-2c9551dc8d38"></script>
 </body>
 </html>

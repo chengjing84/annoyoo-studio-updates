@@ -4,6 +4,8 @@
   const base = location.protocol === 'file:' ? 'http://127.0.0.1:8765' : '';
   const dialog = $('localEngineDialog');
   let state = null, runtime = null, loading = false, generationBusy = false, timer = null, reportedDetection = null;
+  let modelScanReady = false;
+  let modelScanRevision = 0;
   const activeModel = () => !!state?.queuedModelIds?.length || ['queued', 'downloading', 'retrying', 'importing', 'verifying'].includes(state?.task?.status);
   const activeRuntime = () => !!runtime?.task && !['completed', 'error', 'cancelled'].includes(runtime.task.status);
   const gib = value => `${(Number(value || 0) / 1073741824).toFixed(2)} GiB`;
@@ -52,8 +54,8 @@
     $('engineCancelRuntime').disabled = loading || ['extracting', 'checking', 'installing', 'validating'].includes(runtime?.task?.status);
     $('startBuiltinEngine').hidden = !builtin && !state?.engine?.comfyDirectory;
     $('startBuiltinEngine').textContent = state?.engine?.owned ? '返回创作台' : builtin ? '启动本地生图' : '启动已有 ComfyUI';
-    $('startBuiltinEngine').disabled = busy || generationBusy || !state || !state.engine.owned && (builtin ? !runtime?.available || !state.models.every(model => model.verified) : !state.engine.comfyDirectory);
-    $('engineReadyHint').textContent = state?.engine?.owned ? '本地引擎已运行。' : builtin ? '完成两项检测后，即可开始生图。' : '保存后，回到创作台检查连接。';
+    $('startBuiltinEngine').disabled = busy || generationBusy || !state || !state.engine.owned && (builtin ? !runtime?.available || !modelScanReady : !state.engine.comfyDirectory);
+    $('engineReadyHint').textContent = state?.engine?.owned ? state.engine.phase === 'starting' ? '本地引擎正在启动，请稍候。' : '本地引擎已运行。' : builtin ? modelScanReady ? '运行环境与模型已找到，可以启动。' : '准备运行环境和模型后，即可开始生图。' : '保存后，回到创作台检查连接。';
   }
   function renderRuntime() {
     if (!state) return;
@@ -78,25 +80,42 @@
       $('engineRuntimeTransferDetail').textContent = task.error || (task.total ? `${gib(task.received)} / ${gib(task.total)}` : '请保持创作台运行。');
     }
   }
-  function renderModels() {
+  async function renderModels() {
+    const revision = ++modelScanRevision;
+    const snapshot = state;
+    modelScanReady = false;
     $('localModelDirectory').textContent = state.modelRoot;
-    const ready = state.models.filter(model => model.verified).length, present = state.models.filter(model => model.present).length;
-    badge('engineModelsState', ready === state.models.length ? `已就绪 · ${ready}/${state.models.length}` : present === state.models.length ? '已放好，待检测' : `缺少 ${state.models.length - present} 个文件`, ready === state.models.length);
-    $('downloadAllModels').textContent = ready === state.models.length ? '已下载' : state.models.some(model => model.downloadedBytes && !model.present) ? '继续下载' : '自动下载';
-    const list = $('localModelList'); list.replaceChildren();
-    for (const model of state.models) {
-      const row = document.createElement('div'); row.className = 'engine-model-row';
-      const info = document.createElement('div'), title = document.createElement('h4'), location = document.createElement('code'), status = document.createElement('span');
-      title.textContent = model.name; location.textContent = model.file;
-      status.className = 'engine-file-state';
-      status.textContent = state.task?.kind === 'detection' && state.task.status === 'error' && state.task.modelId === model.id ? '校验未通过' : model.verified ? '已通过检测' : model.wrongSize ? '大小不匹配' : model.present ? '待校验' : model.downloadedBytes ? `已下载 ${gib(model.downloadedBytes)}` : '未找到';
-      info.append(title, location);
-      const actions = document.createElement('div'); actions.className = 'engine-model-actions'; actions.append(status);
-      if (model.downloadedBytes && !model.present) { const reset = document.createElement('button'); reset.type = 'button'; reset.className = 'gen-text-button'; reset.dataset.reset = model.id; reset.textContent = '重置进度'; actions.append(reset); }
-      row.append(info, actions); list.append(row);
+    let all = { diffusion: [], textEncoder: [], vae: [], loras: [] }, presets = [];
+    try {
+      const catalog = await request('/api/models?refresh=1');
+      if (revision !== modelScanRevision || state !== snapshot) return;
+      all = catalog.all || all; presets = catalog.presets || [];
+    } catch (error) {
+      if (revision !== modelScanRevision || state !== snapshot) return;
+      badge('engineModelsState', '模型扫描未完成', false);
+      message(error.message, true);
+      controls();
+      return;
     }
+    const counts = {
+      diffusion: (all.diffusion || []).length,
+      textEncoder: (all.textEncoder || []).length,
+      vae: (all.vae || []).length,
+      loras: (all.loras || []).length
+    };
+    const anyMissing = presets.some(p => p.missing?.length);
+    modelScanReady = !!(counts.diffusion && counts.textEncoder && counts.vae && !anyMissing);
+    if (counts.diffusion + counts.textEncoder + counts.vae + counts.loras === 0) {
+      badge('engineModelsState', '尚未扫描到任何模型', false);
+    } else if (anyMissing) {
+      const totalMissing = presets.reduce((s, p) => s + (p.missing?.length || 0), 0);
+      badge('engineModelsState', `已扫描 · 有 ${totalMissing} 项待补充`, false);
+    } else {
+      badge('engineModelsState', `已就绪 · UNet ${counts.diffusion} / CLIP ${counts.textEncoder} / VAE ${counts.vae} · LoRA ${counts.loras}`, true);
+    }
+    $('downloadAllModels').textContent = state.models.every(model => model.verified) ? '标准模型已校验' : modelScanReady ? '下载标准三件套' : '自动下载三件套';
     link('modelQuarkLink', /^https:\/\/(?:pan|drive)\.quark\.cn\//.test(state.quarkUrl || '') ? state.quarkUrl : '');
-    $('modelQuarkHint').textContent = `models 文件夹内请保留以下层级。${state.quarkCode ? `提取码：${state.quarkCode}。` : ''}`;
+    $('modelQuarkHint').textContent = state.quarkCode ? `从夸克网盘下载后，将 models 文件夹放到创作台根目录。提取码：${state.quarkCode}。` : '从夸克网盘下载后，将 models 文件夹放到创作台根目录。';
     const task = state.task;
     $('modelTransfer').hidden = !task || ['completed', 'cancelled'].includes(task.status);
     if (task) {
@@ -107,9 +126,51 @@
       $('modelTransferDetail').textContent = task.error || [task.kind === 'detection' ? title : `${gib(task.received)} / ${gib(task.total)}`, task.sourceName].filter(Boolean).join(' · ');
       if (task.kind === 'detection' && ['completed', 'error'].includes(task.status) && reportedDetection !== task.startedAt) {
         reportedDetection = task.startedAt;
-        message(task.status === 'error' ? task.error : task.missingIds?.length ? `检测完成，还缺少 ${task.missingIds.length} 个模型。请按文件位置放好后再检测。` : '三个模型已通过检测，可以开始生图。', task.status === 'error');
+        message(task.status === 'error' ? task.error : task.missingIds?.length ? `检测完成，还缺少 ${task.missingIds.length} 个标准模型；自定义模型可使用目录扫描结果。` : '三个标准模型已通过 SHA-256 校验。', task.status === 'error');
       }
     }
+  }
+  const KIND_LABELS = { diffusion: 'UNet', text_encoders: 'CLIP', vae: 'VAE', loras: 'LoRA' };
+  const KIND_OPTIONS = Object.keys(KIND_LABELS);
+  function normalizeConfigs(raw) {
+    if (!Array.isArray(raw)) return [];
+    return raw.map(item => {
+      if (typeof item === 'string') return { path: item.trim(), kinds: KIND_OPTIONS.slice() };
+      if (item && typeof item.path === 'string') return { path: item.path.trim(), kinds: Array.isArray(item.kinds) ? item.kinds : KIND_OPTIONS.slice() };
+      return null;
+    }).filter(c => c?.path);
+  }
+  function renderModelDirectoryList(configs) {
+    const list = $('modelDirectoryList');
+    list.replaceChildren();
+    const items = configs.length ? configs : [{ path: '', kinds: KIND_OPTIONS.slice() }];
+    items.forEach((cfg, idx) => {
+      const row = document.createElement('div'); row.className = 'engine-dir-row';
+      const input = document.createElement('input'); input.type = 'text'; input.className = 'engine-dir-path'; input.value = cfg.path || ''; input.placeholder = '例如 D:\\ComfyUI\\ComfyUI\\models';
+      input.addEventListener('change', () => { cfg.path = input.value.trim(); });
+      const kindBox = document.createElement('div'); kindBox.className = 'engine-dir-kinds';
+      KIND_OPTIONS.forEach(k => {
+        const label = document.createElement('label');
+        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = k;
+        if (cfg.kinds.includes(k)) cb.checked = true;
+        cb.addEventListener('change', () => {
+          cfg.kinds = [...kindBox.querySelectorAll('input:checked')].map(c => c.value);
+        });
+        label.append(cb, document.createTextNode(' ' + KIND_LABELS[k]));
+        kindBox.append(label);
+      });
+      const del = document.createElement('button'); del.type = 'button'; del.className = 'gen-text-button'; del.textContent = '删除';
+      del.addEventListener('click', () => { items.splice(idx, 1); renderModelDirectoryList(items); });
+      const footer = document.createElement('div'); footer.className = 'engine-dir-footer';
+      footer.append(kindBox, del);
+      row.append(input, footer);
+      list.append(row);
+    });
+    list._items = items;
+  }
+  function readModelDirectoryConfigs() {
+    const items = $('modelDirectoryList')._items || [];
+    return items.filter(c => c.path && c.path.trim()).map(c => ({ path: c.path.trim(), kinds: c.kinds || KIND_OPTIONS.slice() }));
   }
   async function refresh(fill = false) {
     const [next, environment] = await Promise.all([api(), request('/api/runtime').catch(() => null)]);
@@ -119,11 +180,11 @@
       $('modelDownloadSource').value = (state.downloadSources || []).some(item => item.id === savedSource) ? savedSource : state.defaultDownloadSource || 'official';
       dialog.querySelector(`[name=localEngineMode][value=${state.engine.mode}]`).checked = true;
       $('externalComfyUrl').value = state.engine.externalUrl;
-      $('extraModelDirectories').value = state.engine.modelDirectories.join('\n');
+      renderModelDirectoryList(normalizeConfigs(state.engine.modelDirectories));
       $('engineConnectionOptions').open = state.engine.mode === 'external';
     }
     if (activeModel() && state.task?.sourceId) $('modelDownloadSource').value = state.task.sourceId;
-    sourceHint(); modeFields(); renderRuntime(); renderModels(); controls();
+    sourceHint(); modeFields(); renderRuntime(); await renderModels(); controls();
     if (state.engine.phase === 'error') message(state.engine.error, true);
     clearTimeout(timer);
     if (activeModel() || activeRuntime() || dialog.open && state.engine.phase === 'starting') timer = setTimeout(poll, 1500);
@@ -153,18 +214,22 @@
   $('refreshLocalEngine').addEventListener('click', async () => { try { await refresh(true); connectionChanged(); } catch (error) { message(error.message, true); } });
   $('localEngineForm').addEventListener('submit', async event => {
     event.preventDefault();
-    const body = { mode: selectedMode(), externalUrl: $('externalComfyUrl').value.trim(), modelDirectories: $('extraModelDirectories').value.split(/\r?\n/).map(item => item.trim()).filter(Boolean) };
+    const body = { mode: selectedMode(), externalUrl: $('externalComfyUrl').value.trim(), modelDirectories: readModelDirectoryConfigs() };
     if (await perform('configure', body, '设置已保存。已有模型目录可直接检测。')) connectionChanged();
+  });
+  $('addModelDirectory')?.addEventListener('click', () => {
+    const items = $('modelDirectoryList')._items || [];
+    items.push({ path: '', kinds: KIND_OPTIONS.slice() });
+    renderModelDirectoryList(items);
   });
   $('startBuiltinEngine').addEventListener('click', async () => {
     if (state?.engine?.owned) { dialog.close(); return; }
     if (await perform('start', {}, '本地引擎正在启动。')) connectionChanged();
   });
   $('stopBuiltinEngine').addEventListener('click', async () => { if (await perform('stop', {}, '本地引擎已停止。')) connectionChanged(); });
+  $('detectLocalModels').addEventListener('click', () => perform('detect-models', {}, '正在校验标准模型，大文件可能需要一些时间。'));
   $('downloadAllModels').addEventListener('click', () => perform('download-all', { source: $('modelDownloadSource').value }, '正在自动下载，完成后会放到指定位置并校验。'));
-  $('detectLocalModels').addEventListener('click', () => perform('detect-models', {}, '正在检测指定目录中的模型，大文件校验需要一些时间。'));
   $('cancelModelTransfer').addEventListener('click', () => perform('cancel', {}, '任务已取消，已有下载进度保留。'));
-  $('localModelList').addEventListener('click', event => { const reset = event.target.closest('[data-reset]'); if (reset) perform('reset-download', { modelId: reset.dataset.reset }, '此模型的临时下载已重置。'); });
   $('modelDownloadSource').addEventListener('change', () => { sourceHint(); try { localStorage.setItem('pose-atlas-model-download-source', $('modelDownloadSource').value); } catch {} });
   $('copyModelDirectory').addEventListener('click', async () => { try { await navigator.clipboard.writeText(state.modelRoot); message('模型文件夹路径已复制。'); } catch { message('请选中上方路径并复制。'); } });
   $('modelQuarkLink').addEventListener('click', event => { if ($('modelQuarkLink').getAttribute('aria-disabled') === 'true') { event.preventDefault(); return; } $('modelDownloadOptions').open = true; });

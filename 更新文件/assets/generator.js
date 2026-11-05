@@ -29,6 +29,195 @@
   let retrySaveId = '';
   let retryQuery = false;
   let retrySaveButton = null;
+  let modelCatalog = null; // { groups, all, presets, configs }
+  let modelCatalogLoading = false;
+  let modelCatalogRefreshPending = false;
+  let modelPrefsApplied = false;
+  let modelEditRevision = 0;
+  let userTouchedSteps = false; // 用户手动改过步数时不再被 preset 覆盖
+  let userTouchedCfg = false;
+
+  async function loadModelCatalog(force = false) {
+    if (apiEdition) return;
+    if (modelCatalogLoading) { modelCatalogRefreshPending ||= force; return; }
+    modelCatalogLoading = true;
+    const revision = engineRevision;
+    try {
+      const catalog = await api('/api/models' + (force ? '?t=' + Date.now() : ''), {}, 30000);
+      await loadModelPrefs();
+      if (revision !== engineRevision) return;
+      modelCatalog = catalog;
+      renderModelPresets();
+    } catch (error) {
+      if (revision === engineRevision) formError('模型列表读取失败：' + errorMessage(error));
+    } finally {
+      modelCatalogLoading = false;
+      if (modelCatalogRefreshPending || revision !== engineRevision) {
+        modelCatalogRefreshPending = false;
+        loadModelCatalog(true);
+      }
+    }
+  }
+  const MODEL_MEMORY_KEY = 'pose-atlas-model-memory';
+  let modelPrefsCache = null;
+  async function loadModelPrefs() {
+    const revision = modelEditRevision;
+    await prefsSaveQueue;
+    const prefs = await api('/api/model-prefs');
+    if (revision === modelEditRevision) modelPrefsCache = prefs;
+    return modelPrefsCache || {};
+  }
+  let prefsSaveQueue = Promise.resolve(true);
+  async function saveModelPrefs(prefs) {
+    modelPrefsCache = prefs;
+    const body = JSON.stringify(prefs);
+    prefsSaveQueue = prefsSaveQueue.then(async () => {
+      try {
+        const response = await fetch('/api/model-prefs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+        if (!response.ok) throw new Error('模型设置保存失败，请重试。');
+        return true;
+      } catch (error) { formError(errorMessage(error)); return false; }
+    });
+    return prefsSaveQueue;
+  }
+  function readModelMemory() {
+    // 兼容旧 localStorage，同时从后端缓存读
+    const legacy = (() => { try { return JSON.parse(localStorage.getItem(MODEL_MEMORY_KEY)) || {}; } catch { return {}; } })();
+    return { ...legacy, ...(modelPrefsCache?.presets || {}) };
+  }
+  function writeModelMemory(memory) {
+    modelEditRevision++;
+    // 同时写 localStorage（兼容）和后端文件
+    try { localStorage.setItem(MODEL_MEMORY_KEY, JSON.stringify(memory)); } catch {}
+    const all = { ...(modelPrefsCache || {}), presets: memory };
+    return saveModelPrefs(all);
+  }
+  // 把 groups 转成按父目录分组的 Map<parentDir, [{name, relPath}]>
+  function groupByParentDir(files) {
+    const groups = new Map();
+    for (const f of files) {
+      const rel = f.relPath || f.name;
+      const idx = rel.lastIndexOf('/');
+      const parent = idx > 0 ? rel.slice(0, idx) : '.';
+      if (!groups.has(parent)) groups.set(parent, []);
+      groups.get(parent).push(f);
+    }
+    return groups;
+  }
+  function fillSelectGrouped(selectId, groupsObj, flatNames, selected) {
+    const sel = $(selectId); if (!sel) return;
+    sel.replaceChildren();
+    const fileGroups = groupByParentDir(groupsObj);
+    // 如果只有一个根目录，不加 optgroup，直接平铺
+    const dirs = [...fileGroups.keys()];
+    if (dirs.length <= 1 && dirs[0] === '.') {
+      for (const f of fileGroups.get('.') || []) {
+        const opt = new Option(f.name, f.name);
+        if (f.name === selected) opt.selected = true;
+        sel.append(opt);
+      }
+    } else {
+      // 多目录 → optgroup
+      for (const [dir, files] of fileGroups) {
+        const og = document.createElement('optgroup');
+        og.label = dir === '.' ? '根目录' : dir;
+        for (const f of files) {
+          const opt = new Option(f.name, f.name);
+          if (f.name === selected) opt.selected = true;
+          og.append(opt);
+        }
+        sel.append(og);
+      }
+    }
+  }
+  function renderModelPresets() {
+    if (!modelCatalog?.presets?.length) return;
+    // 只剩一个家族，直接走 presets[0]，不需要下拉框
+    applyPresetMatches({ restoreLoras: !modelPrefsApplied });
+  }
+  function applyPresetMatches({ restoreLoras = true } = {}) {
+    if (!modelCatalog?.presets?.length) return;
+    const preset = modelCatalog.presets[0];
+    const memory = readModelMemory();
+    const slotDefault = (slotKey, match, groupsObj) => {
+      // 1) 记忆里有没有这个 slot 的选择
+      const mem = memory[preset.id]?.[slotKey];
+      if (mem) {
+        const normalized = mem.replaceAll('\\', '/');
+        const exact = groupsObj.find(f => f.name.replaceAll('\\', '/') === normalized);
+        if (exact) return exact.name;
+        const legacy = groupsObj.filter(f => f.name.split(/[\\/]/).pop() === mem);
+        if (legacy.length === 1) return legacy[0].name;
+      }
+      // 2) preset 匹配
+      return match.selected;
+    };
+    fillSelectGrouped('pickUNet', modelCatalog.groups.diffusion, modelCatalog.all.diffusion,
+      slotDefault('diffusion', preset.matches.diffusion, modelCatalog.groups.diffusion));
+    fillSelectGrouped('pickCLIP', modelCatalog.groups.textEncoder, modelCatalog.all.textEncoder,
+      slotDefault('textEncoder', preset.matches.textEncoder, modelCatalog.groups.textEncoder));
+    fillSelectGrouped('pickVAE', modelCatalog.groups.vae, modelCatalog.all.vae,
+      slotDefault('vae', preset.matches.vae, modelCatalog.groups.vae));
+    // 绑定 change 事件保存记忆（先解绑旧的）
+    ['pickUNet', 'pickCLIP', 'pickVAE'].forEach(id => {
+      const el = $(id); if (!el) return;
+      el.onchange = () => {
+        const mem = readModelMemory();
+        if (!mem[preset.id]) mem[preset.id] = {};
+        mem[preset.id][id === 'pickUNet' ? 'diffusion' : id === 'pickCLIP' ? 'textEncoder' : 'vae'] = el.value;
+        writeModelMemory(mem);
+      };
+    });
+    // 处理 LoRA：恢复记忆 → 或按 preset 自动选默认
+    if (restoreLoras) applyPresetLoras(preset);
+    modelPrefsApplied = true;
+    // 自动应用 preset 默认步数 / CFG（用户手动改过就尊重）
+    if (!userTouchedSteps && preset.defaultSteps) $('generationSteps').value = preset.defaultSteps;
+    if (!userTouchedCfg && preset.defaultCfg != null) $('generationCfg').value = preset.defaultCfg;
+  }
+
+  function renderPresetMissing(preset) {
+    // 只剩一个家族，不再渲染缺少提示框
+  }
+
+
+  function applyPresetLoras(preset) {
+    if (!preset || apiEdition) return;
+    const saved = modelPrefsCache?.presets?.[preset.id]?.loras;
+    // 没有已保存的选择时始终为空，不自动挑选或加载目录中的 LoRA。
+    loraSelection.length = 0;
+    for (const item of Array.isArray(saved) ? saved : []) {
+      const names = loraCatalog?.names || [];
+      const normalized = item.name.replaceAll('\\', '/');
+      const exact = names.find(name => name.replaceAll('\\', '/') === normalized);
+      const legacy = names.filter(name => name.split(/[\\/]/).pop() === item.name);
+      loraSelection.push({ name: exact || (legacy.length === 1 ? legacy[0] : item.name), strength: item.strength ?? 1 });
+    }
+    renderLoras();
+    if (loraSelection.length && !loraCatalog && !loraLoading) loadLoras().then(() => { if (loraCatalog) applyPresetLoras(preset); });
+  }
+
+  function saveLoraMemory(presetId) {
+    captureLoras();
+    // 未选择模型的新行暂不持久化，但不影响继续添加其他行。
+    const valid = loraSelection.filter(item => item?.name);
+    if (valid.some(item => item.strength === '' || !Number.isFinite(Number(item.strength)) || Number(item.strength) < -100 || Number(item.strength) > 100)) { formError('LoRA 权重应为 -100 至 100 之间的数字。'); return; }
+    if (new Set(valid.map(item => item.name)).size !== valid.length) { formError('同一 LoRA 请只添加一次。'); return; }
+    const mem = readModelMemory();
+    if (!mem[presetId]) mem[presetId] = {};
+    mem[presetId].loras = valid.map(item => ({ name: item.name, strength: Number(item.strength ?? 1) }));
+    writeModelMemory(mem);
+  }
+  function readModelSelection() {
+    return {
+      presetId: PRESET_ID,
+      model: {
+        diffusion: $('pickUNet')?.value || null,
+        textEncoder: $('pickCLIP')?.value || null,
+        vae: $('pickVAE')?.value || null
+      }
+    };
+  }
 
   if (apiEdition) {
     $('loraSettings').hidden = true;
@@ -92,11 +281,16 @@
     const [width, height] = $('generationSize').value.split('x').map(Number);
     const steps = Number($('generationSteps').value);
     const seed = Number($('generationSeed').value);
-    if (!Number.isInteger(steps) || steps < 20 || steps > 50 || !Number.isInteger(seed) || seed < -1 || seed > 4294967295) throw new Error('请检查生成设置：步数为 20–50 的整数，种子为 -1 或 0–4294967295。');
-    return { poseId: pose?.id || null, costumeId: costume?.id || null, prompt: $('generationPrompt').value.trim(), width, height, steps, seed,
+    if (!Number.isInteger(steps) || steps < 1 || steps > 80 || !Number.isInteger(seed) || seed < -1 || seed > 4294967295) throw new Error('请检查生成设置：步数为 1–80 的整数，种子为 -1 或 0–4294967295。');
+    const cfgText = $('generationCfg')?.value ?? '1';
+    const cfgScale = Number(cfgText);
+    if (cfgText === '' || !Number.isFinite(cfgScale) || cfgScale < 0 || cfgScale > 20) throw new Error('CFG 应为 0–20 的数值。');
+    const sel = readModelSelection();
+    return { poseId: pose?.id || null, costumeId: costume?.id || null, prompt: $('generationPrompt').value.trim(), width, height, steps, cfgScale, seed,
       loras: preview || apiEdition ? [] : readLoras(), copyCamera: !!pose && $('copyCamera').checked, referenceMode, referenceRoles,
       referenceIds: references.flatMap((ref, index) => ref.file ? [ref.id || `preview-${index}`] : []),
-      keepBackground: !!references[0].file && referenceMode !== 'scene' && $('keepBackground').checked };
+      keepBackground: !!references[0].file && referenceMode !== 'scene' && $('keepBackground').checked,
+      presetId: sel.presetId, model: sel.model };
   }
 
   $('previewPrompt').addEventListener('click', async () => {
@@ -134,6 +328,8 @@
     });
   }
 
+  // Focused number inputs consume wheel events to change their value in Chromium.
+  // Keep editing focus and keyboard stepping, but let the wheel move the page.
   function bindNumberWheel(input) {
     if (numberWheelControls.has(input)) return;
     numberWheelControls.add(input);
@@ -153,36 +349,73 @@
   }
 
   function syncLoraControls() {
-    $('loraCount').disabled = busy;
+    $('addLora').disabled = busy || loraLoading;
     $('refreshLoras').disabled = busy || loraLoading;
-    document.querySelectorAll('.gen-lora-row select,.gen-lora-row input').forEach(control => { control.disabled = busy || loraLoading; });
+    document.querySelectorAll('.gen-lora-row select,.gen-lora-row input,.gen-lora-remove').forEach(control => { control.disabled = busy || loraLoading; });
   }
 
   function renderLoras() {
-    const count = Number($('loraCount').value);
+    const count = loraSelection.length;
     $('loraSummary').textContent = count ? `${count} 个` : '默认不使用';
     $('loraRows').replaceChildren();
+    // 按目录分组 LoRA 选项（如果后端返回了 groups）
+    const groupsMap = new Map();
+    if (loraCatalog?.groups && Array.isArray(loraCatalog.groups)) {
+      for (const f of loraCatalog.groups) {
+        const rel = f.relPath || f.name;
+        const idx = rel.lastIndexOf('/');
+        const parent = idx > 0 ? rel.slice(0, idx) : '.';
+        if (!groupsMap.has(parent)) groupsMap.set(parent, []);
+        groupsMap.get(parent).push(f.name);
+      }
+    }
     for (let index = 0; index < count; index++) {
       const selected = loraSelection[index] || { name: '', strength: 1 };
       const row = document.createElement('div'); row.className = 'gen-lora-row';
       const modelLabel = document.createElement('label'); modelLabel.textContent = `LoRA ${index + 1}`;
       const select = document.createElement('select'); select.id = `loraModel${index}`;
       const placeholder = document.createElement('option'); placeholder.value = ''; placeholder.textContent = '请选择本机 LoRA'; select.append(placeholder);
-      for (const name of loraCatalog?.names || []) {
-        const option = document.createElement('option'); option.value = name; option.textContent = name; select.append(option);
+      if (groupsMap.size > 0) {
+        // 多目录 → optgroup 分组
+        for (const [dir, names] of groupsMap) {
+          const og = document.createElement('optgroup');
+          og.label = dir === '.' ? '根目录' : dir;
+          for (const name of names) {
+            const opt = document.createElement('option'); opt.value = name; opt.textContent = name;
+            if (name === selected.name) opt.selected = true;
+            og.append(opt);
+          }
+          select.append(og);
+        }
+      } else {
+        // 无 groups（外部 ComfyUI 模式）→ 平铺
+        for (const name of loraCatalog?.names || []) {
+          const opt = document.createElement('option'); opt.value = name; opt.textContent = name;
+          if (name === selected.name) opt.selected = true;
+          select.append(opt);
+        }
       }
       // Keep unavailable selections visible so a refresh cannot silently clear them.
-      if (selected.name && !loraCatalog?.names.includes(selected.name)) {
+      if (selected.name && !(loraCatalog?.names || []).includes(selected.name)) {
         const unavailable = document.createElement('option'); unavailable.value = selected.name; unavailable.textContent = selected.name + '（当前未找到）'; select.append(unavailable);
+        select.value = selected.name;
       }
-      select.value = selected.name; modelLabel.htmlFor = select.id; modelLabel.append(select);
+      modelLabel.htmlFor = select.id; modelLabel.append(select);
       const weightLabel = document.createElement('label'); weightLabel.textContent = '权重';
       const weight = document.createElement('input'); weight.id = `loraStrength${index}`; weight.type = 'number'; weight.min = '-100'; weight.max = '100'; weight.step = '0.01'; weight.value = selected.strength;
       bindNumberWheel(weight);
       weightLabel.htmlFor = weight.id; weightLabel.append(weight);
-      select.addEventListener('change', () => { captureLoras(); formError(); });
-      weight.addEventListener('input', () => { captureLoras(); formError(); });
-      row.append(modelLabel, weightLabel); $('loraRows').append(row);
+      select.addEventListener('change', () => { captureLoras(); formError(); saveLoraMemory(PRESET_ID); });
+      weight.addEventListener('change', () => { captureLoras(); formError(); saveLoraMemory(PRESET_ID); });
+      const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'gen-text-button gen-lora-remove';
+      remove.textContent = '删除'; remove.setAttribute('aria-label', `删除 LoRA ${index + 1}`);
+      remove.addEventListener('click', () => {
+        if (busy || loraLoading) return;
+        captureLoras(); loraSelection.splice(index, 1); renderLoras(); formError(); saveLoraMemory(PRESET_ID);
+        const next = $('loraRows').querySelectorAll('.gen-lora-remove');
+        (next[Math.min(index, next.length - 1)] || $('addLora')).focus();
+      });
+      row.append(modelLabel, weightLabel, remove); $('loraRows').append(row);
     }
     syncLoraControls();
   }
@@ -197,18 +430,18 @@
       if (revision !== engineRevision) return;
       if (!Array.isArray(catalog.names)) throw new Error('LoRA 列表格式不正确，请重新运行启动创作台.cmd。');
       loraCatalog = catalog;
-      $('loraMessage').textContent = !catalog.available ? '本机缺少 LoRA 加载节点，数量设为 0 可正常生成。' : catalog.names.length ? `已读取 ${catalog.names.length} 个本机 LoRA，可按需选择。` : '尚未找到 LoRA。将文件放入 ComfyUI 的 models/loras 后刷新列表。';
-    } catch (error) { if (revision === engineRevision) $('loraMessage').textContent = errorMessage(error) + ' 数量设为 0 可继续使用原有生成流程。'; }
-    finally { loraLoading = false; renderLoras(); }
+      $('loraMessage').textContent = !catalog.available ? '本机缺少 LoRA 加载节点，不添加 LoRA 可正常生成。' : catalog.names.length ? `已读取 ${catalog.names.length} 个本机 LoRA，可按需选择。` : '尚未找到 LoRA。将文件放入 ComfyUI 的 models/loras 后刷新列表。';
+    } catch (error) { if (revision === engineRevision) $('loraMessage').textContent = errorMessage(error) + ' 不添加 LoRA 可继续生成。'; }
+    finally { loraLoading = false; renderLoras(); if (revision !== engineRevision && loraSelection.length) loadLoras(); }
   }
 
   function readLoras() {
     captureLoras();
-    const count = Number($('loraCount').value);
+    const count = loraSelection.length;
     if (!count) return [];
-    if (loraLoading || !loraCatalog?.available) throw new Error('请先读取可用的 LoRA 列表，或将接入数量设为 0。');
-    const chosen = loraSelection.slice(0, count).map((item, index) => {
-      if (!item?.name || !loraCatalog.names.includes(item.name)) throw new Error(`请选择第 ${index + 1} 个 LoRA，或减少接入数量。`);
+    if (loraLoading || !loraCatalog?.available) throw new Error('请先读取可用的 LoRA 列表，或删除所有 LoRA。');
+    const chosen = loraSelection.map((item, index) => {
+      if (!item?.name || !loraCatalog.names.includes(item.name)) throw new Error(`请选择第 ${index + 1} 个 LoRA，或删除这一项。`);
       const strength = Number(item.strength);
       if (item.strength === '' || !Number.isFinite(strength) || strength < -100 || strength > 100) throw new Error(`第 ${index + 1} 个 LoRA 权重应为 -100 至 100。`);
       return { name: item.name, strength };
@@ -218,8 +451,47 @@
   }
 
   $('loraSettings').addEventListener('toggle', () => { if ($('loraSettings').open) loadLoras(); });
-  $('loraCount').addEventListener('change', () => { captureLoras(); renderLoras(); formError(); if (Number($('loraCount').value)) loadLoras(); });
+  // 只剩一个家族，固定 presetId
+  const PRESET_ID = 'qwen21';
+  $('addLora').addEventListener('click', async () => {
+    if (busy || loraLoading) return;
+    captureLoras(); loraSelection.push({ name: '', strength: 1 }); renderLoras(); formError();
+    if (!loraCatalog) await loadLoras();
+    $(`loraModel${loraSelection.length - 1}`)?.focus();
+  });
   $('refreshLoras').addEventListener('click', () => loadLoras(true));
+  $('refreshModelCatalog')?.addEventListener('click', () => loadModelCatalog(true));
+  $('savePresetDefaults')?.addEventListener('click', () => savePresetDefaults().catch(error => formError(errorMessage(error))));
+  $('resetPresetDefaults')?.addEventListener('click', () => resetPresetDefaults().catch(error => formError(errorMessage(error))));
+
+  // 把当前 UNet/CLIP/VAE/LoRA 保存为持久化默认值
+  async function savePresetDefaults() {
+    const loras = readLoras();
+    const mem = readModelMemory();
+    if (!mem[PRESET_ID]) mem[PRESET_ID] = {};
+    mem[PRESET_ID].diffusion = $('pickUNet')?.value || '';
+    mem[PRESET_ID].textEncoder = $('pickCLIP')?.value || '';
+    mem[PRESET_ID].vae = $('pickVAE')?.value || '';
+    mem[PRESET_ID].loras = loras;
+    if (!await writeModelMemory(mem)) return;
+    const btn = $('savePresetDefaults');
+    const origText = btn.textContent;
+    btn.textContent = '✓ 已保存';
+    setTimeout(() => { btn.textContent = origText; }, 1500);
+  }
+
+  // 清除持久化记忆，恢复到 preset 自动匹配的默认值
+  async function resetPresetDefaults() {
+    const mem = readModelMemory();
+    if (mem[PRESET_ID]) delete mem[PRESET_ID];
+    if (!await writeModelMemory(mem)) return;
+    userTouchedSteps = false; userTouchedCfg = false;
+    applyPresetMatches();
+    const btn = $('resetPresetDefaults');
+    const origText = btn.textContent;
+    btn.textContent = '↺ 已恢复';
+    setTimeout(() => { btn.textContent = origText; }, 1500);
+  }
 
   function readStorage(key) { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } }
   function saveStorage(key, value) { try { if (value) localStorage.setItem(key, JSON.stringify(value)); else localStorage.removeItem(key); } catch { /* Private file mode can disable persistence. */ } }
@@ -271,7 +543,7 @@
       ? '已采用人物换装模式：以人物图为主体，服装图提供穿搭。未指定动作和机位时保留人物原有姿态；可在这里提出新的动作、场景或画风要求。'
       : '至少选择姿势或服装之一。所选参考与描述自动带入，在这里补充场景、画风或两位人物的安排。有可用人物图时可留空。';
     if (pose?.体系 === '上半身单人' || /^upper80v2_/i.test(pose?.id || '')) $('promptHint').textContent = '上半身取景已锁定：完整头部至腰部，保留手势，不为展示鞋袜或全套服装拉远镜头。' + $('promptHint').textContent;
-    $('generateButton').disabled = busy || !serviceReady || !hasSource || missingPrimary || (!hasPeople && !$('generationPrompt').value.trim());
+    $('generateButton').disabled = busy || !serviceReady || !hasSource || missingPrimary || loraLoading || (!hasPeople && !$('generationPrompt').value.trim());
     $('generateButton').querySelector('span').textContent = busy ? '正在生成…' : '开始生成';
     $('generationSubmitHint').textContent = busy ? '生成时可继续浏览图库' : !hasSource ? '选择姿势或服装，也可上传人物1与环境图' : missingPrimary ? '先上传人物参考1，再接入第二位人物或补充图' : !hasPeople && !$('generationPrompt').value.trim() ? '上传人物参考1，或填写人物描述' : !serviceReady ? (apiEdition ? '配置生图 API 后即可开始' : '连接本机生成服务后即可开始') : `${!pose && !costume ? '人物' : ''}${pose ? '姿势' : ''}${pose && costume ? ' + ' : ''}${costume ? '服装' : ''}${sceneActive ? ' + 场景' : ''} · 图片保存到 output/`;
     $('keepBackground').disabled = busy || !hasPeople || sceneActive;
@@ -417,41 +689,73 @@
     updateSubmit();
   }
 
+  let autoReconnectTimer = null;
+  const AUTO_RECONNECT_MS = 5000;
+
+  function stopAutoReconnect() {
+    if (autoReconnectTimer) { clearTimeout(autoReconnectTimer); autoReconnectTimer = null; }
+  }
+  function scheduleAutoReconnect() {
+    stopAutoReconnect();
+    if (apiEdition) return;
+    autoReconnectTimer = setTimeout(() => { autoReconnectTimer = null; checkConnection(); }, AUTO_RECONNECT_MS);
+  }
+
   async function checkConnection() {
     if (connectionChecking) return;
+    stopAutoReconnect();
     connectionChecking = true;
     const revision = engineRevision;
     $('recheckConnection').disabled = true;
-    $('connectionMessage').textContent = apiEdition ? '正在读取 API 配置…' : '正在连接本机生成服务…';
-    $('generationConnection').classList.remove('is-ready', 'is-error');
+
+    // === 统一 amber：正在连接中…… ===
+    $('connectionMessage').textContent = '正在连接中……';
+    $('generationConnection').classList.remove('is-ready', 'is-error'); $('generationConnection').classList.add('is-checking');
+    $('generationStartHelp').hidden = true;
+
     try {
       const status = await api('/api/status?refresh=1');
       if (revision !== engineRevision) return;
       serviceReady = !!status.connected && !!status.ready;
-      $('generationConnection').classList.add(serviceReady ? 'is-ready' : 'is-error');
+
+      const connection = $('generationConnection');
+      connection.classList.remove('is-checking', 'is-ready', 'is-error');
+      connection.classList.add(serviceReady ? 'is-ready' : 'is-error');
       $('connectionMessage').textContent = apiEdition
-        ? status.message || (serviceReady ? 'API 配置已就绪，可以提交生成。' : '请先填写生图 API 设置。')
-        : serviceReady ? '本机已连接 · Qwen-Image 2.1 标准版就绪' : status.message || (status.connected ? '模型尚未就绪，请检查本机配置。' : 'ComfyUI 未连接，请先启动 ComfyUI。');
+        ? serviceReady ? '生图 API 已配置' : '生图 API 待配置'
+        : serviceReady ? 'ComfyUI 已就绪' : status.connected ? '已连接 ComfyUI，模型或节点待补齐' : '未连接 ComfyUI，5 秒后重试';
       if (apiEdition) {
-        $('generationStartHelp').hidden = serviceReady;
-        $('generationStartHelp').textContent = '点击右上方“生图 API 设置”，填写接口地址、API Key 和模型名称。';
         const model = typeof status.model === 'string' ? status.model : status.model?.name;
         $('generationModelLabel').textContent = model || '外接生图 API';
         $('generationModelLabel').title = model || '外接生图 API';
-        $('apiSizeHint').textContent = status.sizeMode === 'selected' ? '请求尺寸：竖图 1024 × 1536，横图 1536 × 1024，方图 1024 × 1024。模型需支持所选尺寸。' : '比例作为画面要求写入提示词；输出尺寸由服务商自动决定。';
+        $('apiSizeHint').textContent = status.sizeMode === 'selected' ? '请求尺寸：由所选服务商决定，请在 API 设置中确认。' : '比例作为画面要求写入提示词；输出尺寸由服务商自动决定。';
+        if (!serviceReady) {
+          $('generationStartHelp').hidden = false;
+          $('generationStartHelp').textContent = '请先在上方"生图 API 设置"中填写接口地址和模型。';
+        }
         return;
       }
-      $('generationStartHelp').hidden = !!status.connected;
-      if (status.missing && status.missing.length) $('generationStartHelp').textContent = `缺少：${status.missing.join('、')}。请补齐模型后重新检查。`;
-      else $('generationStartHelp').textContent = '请双击项目目录中的“启动创作台.cmd”，再点击重新检查。';
-      if (status.missing && status.missing.length) $('generationStartHelp').hidden = false;
+      // Studio 版未就绪：附加提示（不影响主文案）
+      if (!serviceReady) {
+        if (status.missing && status.missing.length) {
+          $('generationStartHelp').textContent = `缺少：${status.missing.join('、')}。请补齐模型后刷新。`;
+        } else {
+          $('generationStartHelp').textContent = status.message || '每 5 秒自动重试，也可点击"重新检查"。';
+        }
+        $('generationStartHelp').hidden = false;
+      }
+      if (serviceReady || status.connected) loadModelCatalog();
+      if (status.connected) stopAutoReconnect();
+      else scheduleAutoReconnect();
     } catch (error) {
       if (revision !== engineRevision) return;
       serviceReady = false;
+      $('generationConnection').classList.remove('is-checking', 'is-ready');
       $('generationConnection').classList.add('is-error');
-      $('connectionMessage').textContent = errorMessage(error);
-      $('generationStartHelp').textContent = apiEdition ? '请双击整合包中的“启动创作台.cmd”，再点击重新检查。' : '请双击项目目录中的“启动创作台.cmd”，再点击重新检查。';
+      $('connectionMessage').textContent = '连接检查失败，正在重试';
+      $('generationStartHelp').textContent = errorMessage(error);
       $('generationStartHelp').hidden = false;
+      scheduleAutoReconnect();
     } finally {
       connectionChecking = false;
       $('recheckConnection').disabled = false;
@@ -463,7 +767,7 @@
   function setBusy(value) {
     busy = value;
     if (retrySaveButton) retrySaveButton.disabled = value;
-    for (const id of ['referenceFile', 'referenceFile2', 'referenceMode', 'generationPrompt', 'copyCamera', 'generationSize', 'generationSteps', 'generationSeed', 'removeReference', 'removeReference2', 'removePose', 'chooseCostume', 'selectedCostumePreview', 'removeCostume']) $(id).disabled = value;
+    for (const id of ['generationCfg', 'sizeOrientation', 'refreshModelCatalog', 'savePresetDefaults', 'resetPresetDefaults', 'referenceFile', 'referenceFile2', 'referenceMode', 'generationPrompt', 'copyCamera', 'generationSize', 'generationSteps', 'generationSeed', 'removeReference', 'removeReference2', 'removePose', 'chooseCostume', 'selectedCostumePreview', 'removeCostume']) $(id).disabled = value;
     $('generationJobOverlay').hidden = !value;
     syncLoraControls();
     updateSubmit();
@@ -543,7 +847,16 @@
     if (!serviceReady) { formError(apiEdition ? '请先配置生图 API。' : '请先连接本机生成服务。'); checkConnection(); return; }
     let payload;
     try { payload = readGenerationPayload(); }
-    catch (error) { formError(errorMessage(error)); if (/LoRA/.test(errorMessage(error))) $('loraSettings').open = true; return; }
+    catch (error) {
+      const msg = errorMessage(error);
+      formError(msg);
+      $('generationJobStatus').textContent = '准备失败：' + msg;
+      $('generationJobStatus').classList.add('is-error');
+      $('generationJobStatus').hidden = false;
+      if (/LoRA/.test(msg)) { $('loraSettings').open = true; loadLoras(); }
+      return;
+    }
+    console.log(`[前端] submit: option.value=$('generationSize').value → width=${payload.width} height=${payload.height} (toggle按钮文本=$('sizeOrientation')?.textContent)`);
     const key = promptSelectionKey();
     formError();
     if (retrySaveButton) retrySaveButton.hidden = true;
@@ -566,9 +879,11 @@
       pollJob();
     } catch (error) {
       setBusy(false);
-      formError(errorMessage(error));
-      $('generationJobStatus').textContent = '任务未提交成功，请按提示检查后重试。';
+      const msg = errorMessage(error);
+      formError(msg);
+      $('generationJobStatus').textContent = '提交失败：' + msg;
       $('generationJobStatus').classList.add('is-error');
+      $('generationJobStatus').hidden = false;
     }
   });
 
@@ -581,20 +896,48 @@
     ['dragleave', 'drop'].forEach(name => drop.addEventListener(name, event => { event.preventDefault(); drop.classList.remove('is-dragging'); }));
     drop.addEventListener('drop', event => { if (event.dataTransfer.files[0]) setReference(event.dataTransfer.files[0], index); });
   });
-  document.querySelectorAll('#generationForm input[type=number]').forEach(bindNumberWheel);
   $('generationPrompt').addEventListener('input', () => { formError(); updateSubmit(); });
   $('referenceMode').addEventListener('change', () => { formError(); updateSubmit(); });
+  document.querySelectorAll('#generationForm input[type=number]').forEach(bindNumberWheel);
+  $('generationSteps').addEventListener('input', () => { userTouchedSteps = true; });
+  $('generationCfg').addEventListener('input', () => { userTouchedCfg = true; });
   $('copyCamera').addEventListener('change', renderSelectedPoseDescription);
   $('generationForm').addEventListener('input', invalidatePromptRecord);
   $('generationForm').addEventListener('change', invalidatePromptRecord);
   $('recheckConnection').addEventListener('click', checkConnection);
+  // 菜单始终显示实际提交的方向与尺寸。
+  const $sizeSel = $('generationSize');
+  const $sizeToggle = $('sizeOrientation');
+  $sizeSel.querySelectorAll('option').forEach(opt => {
+    opt.dataset.baseValue ||= opt.value;
+    opt.dataset.baseRatio ||= opt.textContent.split(' · ')[0];
+  });
+  const ORIENTATION_KEY = 'pose-atlas-orientation-v2';
+  let currentPortrait = true;
+  try { const saved = localStorage.getItem(ORIENTATION_KEY); if (saved !== null) currentPortrait = saved === 'portrait'; } catch {}
+  function applySizeOrientation(portrait) {
+    $sizeSel.querySelectorAll('option').forEach(opt => {
+      const [bw, bh] = opt.dataset.baseValue.split('x').map(Number);
+      const [rw, rh] = opt.dataset.baseRatio.split(':');
+      const [width, height] = portrait ? [bh, bw] : [bw, bh];
+      opt.value = `${width}x${height}`;
+      opt.textContent = `${portrait ? `${rh}:${rw}` : `${rw}:${rh}`} · ${width} × ${height}${opt.dataset.tier ? ` · ${opt.dataset.tier}` : ''}`;
+    });
+    $sizeToggle.textContent = portrait ? '↕ 竖向' : '↔ 横向';
+    try { localStorage.setItem(ORIENTATION_KEY, portrait ? 'portrait' : 'landscape'); } catch {}
+  }
+  $sizeToggle.hidden = apiEdition;
+  $sizeToggle.addEventListener('click', () => { currentPortrait = !currentPortrait; applySizeOrientation(currentPortrait); invalidatePromptRecord(); });
+  if (!apiEdition) applySizeOrientation(currentPortrait);
   function connectionSettingsChanged() {
     engineRevision++;
+    modelPrefsApplied = false;
     serviceReady = false;
     references.forEach(reference => { reference.id = ''; });
-    loraCatalog = null; loraSelection.length = 0; $('loraCount').value = '0'; renderLoras();
+    loraCatalog = null; loraSelection.length = 0; renderLoras();
     updateSubmit();
     checkConnection();
+    loadModelCatalog(true);
   }
   document.addEventListener('local-engine-changed', connectionSettingsChanged);
   document.addEventListener('image-api-changed', connectionSettingsChanged);
@@ -629,5 +972,6 @@
     pollJob();
   }
   checkConnection();
+  loadModelCatalog(); // 立即扫本地模型目录，不等待引擎 ready
   updateSubmit();
 })();

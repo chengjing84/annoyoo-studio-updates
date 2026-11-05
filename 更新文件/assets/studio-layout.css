@@ -123,5 +123,6 @@
   .source-links{margin-left:auto;gap:18px}
 }
 
+/* The generation workspace uses the page scrollbar, including long text. */
 #generationForm #generationPrompt{field-sizing:content;height:auto;min-height:64px;max-height:none}
 .gen-form .gen-prompt-preview pre,.gen-form .gen-selected-description .pose-description-text{max-height:none;overflow:visible}

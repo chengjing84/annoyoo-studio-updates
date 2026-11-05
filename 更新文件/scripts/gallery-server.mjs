@@ -5,7 +5,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID, createHash } from 'node:crypto';
 import { selectModels, selectLoras, validateOptions, buildWorkflow, createPromptRecord } from './qwen-workflow.mjs';
-import { LocalEngine, detectExistingComfy } from './local-engine.mjs';
+import { LocalEngine, detectExistingComfy, normalizeModelDirectoryConfigs } from './local-engine.mjs';
+import { MODEL_PRESETS, matchPreset, summarizeMissing, validateModelPreferences } from './model-presets.mjs';
+import { scanModelDirectories, resolveModelName } from './model-catalog.mjs';
 import { isAllowedLocalOrigin } from './local-request.mjs';
 
 const scriptRoot = path.dirname(fileURLToPath(import.meta.url));
@@ -30,6 +32,22 @@ try {
 }
 const runtimeRoot = path.join(root, '.local');
 await mkdir(runtimeRoot, { recursive: true });
+const modelPrefsPath = path.join(runtimeRoot, 'model-prefs.json');
+let prefsWriting = Promise.resolve();
+async function readModelPrefs() {
+  await prefsWriting.catch(() => {});
+  try { return validateModelPreferences(JSON.parse(await readFile(modelPrefsPath, 'utf8'))); }
+  catch (error) { if (error.code === 'ENOENT') return {}; throw new ApiError(400, '模型设置文件无法读取，请在界面恢复默认后重新保存'); }
+}
+async function writeModelPrefs(prefs) {
+  const contents = JSON.stringify(prefs, null, 2);
+  prefsWriting = prefsWriting.catch(() => {}).then(async () => {
+    const tmp = modelPrefsPath + '.tmp';
+    await writeFile(tmp, contents, 'utf8');
+    await rename(tmp, modelPrefsPath);
+  });
+  await prefsWriting;
+}
 const outputRoot = path.join(root, 'output');
 await mkdir(outputRoot, { recursive: true });
 const statePath = path.join(runtimeRoot, 'generation-state.json');
@@ -37,6 +55,7 @@ let saved = {};
 try { saved = JSON.parse(await readFile(statePath, 'utf8')); } catch (e) { if (e.code !== 'ENOENT') console.warn('旧任务记录无法读取，将新建记录。'); }
 const references = new Map(Object.entries(saved.references || {}));
 const jobs = new Map(Object.entries(saved.jobs || {}));
+// 任务沿用原 ComfyUI 地址，通过 history/queue 恢复，不重复提交生成。
 const poseUploads = new Map();
 const costumeUploads = new Map();
 let writing = Promise.resolve();
@@ -56,7 +75,8 @@ async function comfyFetch(endpoint, options = {}, timeout = 15000, targetUrl = c
   try {
     return await fetch(targetUrl + endpoint, { ...options, signal: AbortSignal.timeout(timeout) });
   } catch {
-    throw new ApiError(503, '无法连接本机 ComfyUI，请先启动 ComfyUI，再点击重新检查。');
+    const mode = engine?.settings?.mode === 'builtin' ? '内置' : '外部';
+    throw new ApiError(503, `无法连接 ${mode} ComfyUI（${targetUrl}）。请确认 ComfyUI 正在运行。`);
   }
 }
 
@@ -79,9 +99,30 @@ let modelInfoUrl = null;
 async function getModels(force = false, targetUrl = comfyUrl) {
   if (!force && modelInfo && modelInfoUrl === targetUrl && Date.now() - modelChecked < 60000) return modelInfo;
   const info = await comfyJson('/object_info', undefined, 25000, targetUrl);
-  const result = { ...selectModels(info), loras: selectLoras(info) };
+  const base = selectModels(info);
+  const allNames = base.all;
+  const result = {
+    ...base,
+    loras: selectLoras(info),
+    presets: MODEL_PRESETS.map(p => {
+      const matches = matchPreset(p, allNames);
+      return { id: p.id, name: p.name, description: p.description, workflow: p.workflow,
+        loraSubdir: p.loraSubdir, defaultLoraPattern: p.defaultLoraPattern?.toString(), defaultLoraName: p.defaultLoraName, defaultSteps: p.defaultSteps, defaultCfg: p.defaultCfg, defaultLoraStrength: p.defaultLoraStrength,
+        matches, missing: summarizeMissing(p, matches) };
+    })
+  };
   if (targetUrl === comfyUrl) { modelInfo = result; modelInfoUrl = targetUrl; modelChecked = Date.now(); }
   return result;
+}
+
+async function scanLocalModelDirectories() {
+  if (engine.settings.mode === 'external') {
+    const { all, loras } = await getModels(true);
+    const names = { ...all, loras: loras.names };
+    const kinds = { diffusion: 'diffusion_models', textEncoder: 'text_encoders', vae: 'vae', loras: 'loras' };
+    return Object.fromEntries(Object.entries(names).map(([slot, files]) => [slot, files.map(name => ({ name, relPath: `${kinds[slot]}/${name.replaceAll('\\', '/')}`, loraName: name }))]));
+  }
+  return scanModelDirectories(engine.modelRoot, engine.settings.modelDirectories);
 }
 
 const clientId = randomUUID();
@@ -332,22 +373,64 @@ const server = http.createServer(async (req, res) => {
         throw new ApiError(404, '接口不存在');
       } catch (error) { if (error instanceof ApiError) throw error; throw new ApiError(400, error.message); }
     }
+    if (req.method === 'GET' && url.pathname === '/api/models') {
+      try {
+        const groups = await scanLocalModelDirectories();
+        const all = {
+          diffusion: groups.diffusion.map(f => f.name),
+          textEncoder: groups.textEncoder.map(f => f.name),
+          vae: groups.vae.map(f => f.name),
+          loras: groups.loras.map(f => f.name)
+        };
+        const presets = MODEL_PRESETS.map(p => {
+          const matches = matchPreset(p, all);
+          return { id: p.id, name: p.name, description: p.description, workflow: p.workflow,
+            loraSubdir: p.loraSubdir, defaultLoraPattern: p.defaultLoraPattern?.toString(), defaultLoraName: p.defaultLoraName, defaultSteps: p.defaultSteps, defaultCfg: p.defaultCfg, defaultLoraStrength: p.defaultLoraStrength,
+            matches, missing: summarizeMissing(p, matches) };
+        });
+        json(res, 200, { groups, all, presets, configs: normalizeModelDirectoryConfigs(engine.settings.modelDirectories) });
+      } catch (error) { json(res, 500, { error: error.message }); }
+      return;
+    }
     if (req.method === 'GET' && url.pathname === '/api/status') {
       try {
         if (changingEngine) throw new ApiError(409, '连接设置正在切换，请稍后重新检查');
         const targetUrl = comfyUrl;
-        const [{ model, missing }, queue] = await Promise.all([getModels(url.searchParams.has('refresh'), targetUrl), comfyJson('/queue', undefined, undefined, targetUrl)]);
+        const [{ model, missing, presets, all }, queue] = await Promise.all([getModels(url.searchParams.has('refresh'), targetUrl), comfyJson('/queue', undefined, undefined, targetUrl)]);
         if (targetUrl !== comfyUrl || changingEngine) throw new ApiError(409, '连接设置已变化，请重新检查');
         engine.connected();
-        json(res, 200, { connected: true, ready: !missing.length, message: missing.length ? missing.join('；') : 'Qwen-Image 2.1 标准版已就绪', comfyUrl, model, missing, features: { costumes: true, maxReferences: 2, projectOutput: true, loras: true }, outputDirectory: outputRoot, queue: { running: queue.queue_running?.length || 0, pending: queue.queue_pending?.length || 0 } });
+        json(res, 200, { connected: true, ready: !missing.length, message: missing.length ? missing.join('；') : '引擎已就绪', comfyUrl, model, missing, features: { costumes: true, maxReferences: 2, projectOutput: true, loras: true }, outputDirectory: outputRoot, queue: { running: queue.queue_running?.length || 0, pending: queue.queue_pending?.length || 0 }, presets, all });
       } catch (error) { json(res, 200, { connected: false, ready: false, message: error.message, comfyUrl, model: {}, missing: [], queue: { running: 0, pending: 0 } }); }
       return;
     }
+    if (req.method === 'GET' && url.pathname === '/api/model-prefs') {
+      json(res, 200, await readModelPrefs()); return;
+    }
+    if (req.method === 'POST' && url.pathname === '/api/model-prefs') {
+      const bytes = await readBody(req, 64 * 1024);
+      let prefs = {};
+      try { prefs = JSON.parse(bytes.toString('utf8')); } catch { throw new ApiError(400, 'JSON 无效'); }
+      try { prefs = validateModelPreferences(prefs); } catch (error) { throw new ApiError(400, error.message); }
+      await writeModelPrefs(prefs);
+      json(res, 200, { ok: true }); return;
+    }
     if (req.method === 'GET' && url.pathname === '/api/loras') {
       const targetUrl = comfyUrl;
-      const { loras } = await getModels(url.searchParams.has('refresh'), targetUrl);
-      if (targetUrl !== comfyUrl || changingEngine) throw new ApiError(409, '连接设置已变化，请刷新 LoRA 列表');
-      json(res, 200, loras); return;
+      if (engine.settings.mode === 'builtin') {
+        // 本地引擎：直接用本地扫描结果，带回目录分组信息
+        const groups = await scanLocalModelDirectories();
+        const files = groups.loras;
+        json(res, 200, {
+          available: true,
+          names: files.map(f => f.name),
+          groups: files
+        });
+      } else {
+        const { loras } = await getModels(url.searchParams.has('refresh'), targetUrl);
+        if (targetUrl !== comfyUrl || changingEngine) throw new ApiError(409, '连接设置已变化，请刷新 LoRA 列表');
+        json(res, 200, { available: true, ...loras });
+      }
+      return;
     }
     if (req.method === 'POST' && url.pathname === '/api/reference') {
       if (changingEngine) throw new ApiError(409, '正在切换连接，请稍后上传');
@@ -366,9 +449,13 @@ const server = http.createServer(async (req, res) => {
         if (changingEngine) throw new ApiError(409, '正在切换连接，请稍后生成');
         submitting = true; activeSubmissions++;
       }
+      const rawBody = await readJson(req);
+      const savedPreset = url.pathname === '/api/generate' ? (await readModelPrefs()).presets?.[rawBody?.presetId || 'qwen21'] || {} : {};
+      if (rawBody && rawBody.loras === undefined && Array.isArray(savedPreset.loras)) rawBody.loras = savedPreset.loras;
       let options;
-      try { options = validateOptions(await readJson(req), poses, descriptions, costumes); }
+      try { options = validateOptions(rawBody, poses, descriptions, costumes); }
       catch (error) { if (error instanceof ApiError) throw error; throw new ApiError(400, error.message); }
+      console.log(`[generate] 收到 width=${options.width} height=${options.height} (raw body: ${rawBody.width}x${rawBody.height})`);
       const promptRecord = createPromptRecord(options);
       // Preview only compiles the same local template. It neither uploads images
       // nor contacts ComfyUI, and does not require live reference IDs.
@@ -376,23 +463,43 @@ const server = http.createServer(async (req, res) => {
       const personReferences = options.referenceIds.map(id => references.get(id));
       if (personReferences.some(reference => !reference)) throw new ApiError(400, '参考图记录已失效，请重新上传');
       if (personReferences.some(reference => reference.comfyUrl && reference.comfyUrl !== comfyUrl)) throw new ApiError(400, '参考图属于之前的 ComfyUI 连接，请重新上传');
-      const { model, missing, loras } = await getModels(options.loras.length > 0);
-      if (missing.length) throw new ApiError(503, missing.join('；'));
-      const activeLoras = options.loras.filter(item => item.strength !== 0);
-      if (activeLoras.length && !loras.available) throw new ApiError(400, '本机 ComfyUI 缺少 LoRA 模型加载节点，请将 LoRA 数量设为 0，或检查 ComfyUI 配置');
-      for (const item of activeLoras) {
-        if (!loras.names.includes(item.name)) throw new ApiError(400, `找不到 LoRA：${item.name}。请刷新列表后重新选择。`);
-      }
+      // 已连接的 ComfyUI 模型列表是提交工作流时的唯一依据，也支持远程服务。
+      const { all, loras, missing } = await getModels(true);
+      const requiredMissing = missing.filter(message => !message.includes('LoraLoaderModelOnly'));
+      if (requiredMissing.length) throw new ApiError(503, requiredMissing.join('；'));
+      const presetId = rawBody.presetId || 'qwen21';
+      const preset = MODEL_PRESETS.find(p => p.id === presetId);
+      if (!preset) throw new ApiError(400, '请选择有效的模型家族');
+      const matches = matchPreset(preset, all);
+      const workflowType = preset.workflow;
+      const userModel = rawBody.model || {};
+      const model = {};
+      try {
+        for (const [slot, label] of Object.entries({ diffusion: 'UNet 模型', textEncoder: '文本编码器', vae: 'VAE' })) {
+          model[slot] = resolveModelName(userModel[slot] || savedPreset[slot] || matches[slot].selected, all[slot], label);
+          if (!model[slot]) throw new Error(`没找到${label}，请在设置里检查模型目录`);
+        }
+        const activeLoras = options.loras.filter(item => item.strength !== 0);
+        if (activeLoras.length && !loras.available) throw new Error('本机 ComfyUI 缺少 LoRA 模型加载节点，请删除已添加的 LoRA');
+        options.loras = options.loras.map(item => ({ ...item, name: item.strength === 0 ? item.name : resolveModelName(item.name, loras.names, 'LoRA') }));
+      } catch (error) { throw new ApiError(400, error.message); }
       const poseImage = options.pose ? await uploadPose(options.pose) : null;
       const costumeImage = options.costume ? await uploadCostume(options.costume) : null;
-      const graph = buildWorkflow({ options, model, poseImage, costumeImage, referenceImages: personReferences.map(reference => reference.image) });
-      const metadata = { poseId: options.pose?.id || null, costumeId: options.costume?.id || null, referenceMode: options.referenceMode, referenceRoles: options.referenceRoles, referenceCount: personReferences.length, loras: options.loras, model: 'Qwen-Image 2.1 standard', seed: options.seed, promptRecord, comfyUrl };
-      const result = await comfyJson('/prompt', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: graph, client_id: clientId, extra_data: { extra_pnginfo: { pose_gallery: metadata } } }) }, 30000);
-      const id = result.prompt_id;
-      if (typeof id !== 'string' || !/^[a-f\d-]+$/i.test(id)) throw new ApiError(502, 'ComfyUI 没有返回有效的任务编号');
-      jobs.set(id, { ...metadata, status: 'queued', createdAt: Date.now(), images: [] });
-      await saveState();
-      json(res, 201, { promptId: id, seed: options.seed, promptRecord }); return;
+      const graph = buildWorkflow({ options, model, workflowType, poseImage, costumeImage, referenceImages: personReferences.map(reference => reference.image) });
+      const metadata = { poseId: options.pose?.id || null, costumeId: options.costume?.id || null, referenceMode: options.referenceMode, referenceRoles: options.referenceRoles, referenceCount: personReferences.length, loras: options.loras, presetId, workflowType, model, seed: options.seed, promptRecord, comfyUrl };
+      console.log(`[generate] preset=${presetId} workflow=${workflowType} model=${model.diffusion?.substring(0,30)} refs=${personReferences.length} loras=${options.loras.filter(l=>l.strength!==0).length} graph_nodes=${Object.keys(graph).length}`);
+      try {
+        const result = await comfyJson('/prompt', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: graph, client_id: clientId, extra_data: { extra_pnginfo: { pose_gallery: metadata } } }) }, 30000);
+        const id = result.prompt_id;
+        if (typeof id !== 'string' || !/^[a-f\d-]+$/i.test(id)) throw new ApiError(502, 'ComfyUI 没有返回有效的任务编号');
+        jobs.set(id, { ...metadata, status: 'queued', createdAt: Date.now(), images: [] });
+        await saveState();
+        json(res, 201, { promptId: id, seed: options.seed, promptRecord }); return;
+      } catch (e) {
+        console.error(`[generate] ComfyUI 错误: ${e.message}`);
+        console.error(`[generate] graph=`, JSON.stringify(graph).substring(0, 500));
+        throw e;
+      }
     }
     const jobMatch = url.pathname.match(/^\/api\/jobs\/([a-f\d-]+)$/i);
     if (req.method === 'GET' && jobMatch) { json(res, 200, await inspectJob(jobMatch[1])); return; }
@@ -426,9 +533,12 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200, { 'Content-Type': MIME[path.extname(filename)] || 'application/octet-stream', 'Content-Length': fileStat.size, 'Cache-Control': /\/(?:img|thumbs)\//.test(relative) ? 'public, max-age=86400' : 'no-cache' });
     if (req.method === 'HEAD') res.end(); else createReadStream(filename).pipe(res);
   } catch (error) {
-    if (!res.headersSent) json(res, error.status || 500, { error: error.status ? error.message : '本地服务处理失败，请查看启动窗口中的日志。' });
+    const msg = error?.message || String(error);
+    const status = error?.status || 500;
+    console.error(`[gallery] ${req.method} ${req.url} → ${status}: ${msg}`);
+    if (error?.stack) console.error(error.stack);
+    if (!res.headersSent) json(res, status, { error: msg });
     else res.end();
-    if (!error.status) console.error(error);
   } finally { if (submitting) activeSubmissions--; if (changing) changingEngine = false; }
 });
 
@@ -441,7 +551,7 @@ server.on('error', error => {
   process.exitCode = 1;
   stopped = true; clearTimeout(reconnectTimer); clearTimeout(archiveTimer); socket?.close();
 });
-server.listen(port, '127.0.0.1', () => console.log(`POSE Atlas: ${baseUrl}\nComfyUI: ${comfyUrl}\nModel: Qwen-Image 2.1 standard (no Turbo/Lightning)\nPress Ctrl+C to stop.`));
+server.listen(port, '127.0.0.1', () => console.log(`POSE Atlas: ${baseUrl}\nComfyUI: ${comfyUrl}\nPress Ctrl+C to stop.`));
 if (engine.settings.mode === 'builtin' && process.env.GALLERY_NO_AUTO_START !== '1') engine.start().then(resetConnection).catch(error => console.warn(error.message));
 monitorJobs();
 async function shutdown() { stopped = true; clearTimeout(reconnectTimer); clearTimeout(archiveTimer); socket?.close(); await engine.close(); server.close(() => process.exit(0)); }

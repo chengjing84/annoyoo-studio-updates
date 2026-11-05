@@ -9,7 +9,7 @@ import { pipeline } from 'node:stream/promises';
 import { Transform } from 'node:stream';
 import { randomUUID } from 'node:crypto';
 import { ImageApiSettings, publicSettings } from './image-api.mjs';
-import { normalizeComfyUrl, inspectExistingComfy } from './local-engine.mjs';
+import { normalizeComfyUrl, inspectExistingComfy, normalizeModelDirectoryConfigs } from './local-engine.mjs';
 import { isAllowedLocalOrigin } from './local-request.mjs';
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -20,8 +20,8 @@ const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; cha
 export function transformStudioIndex(source, mode, apiDialog = '') {
   if (mode === 'api') {
     source = source.replace('assets/local-engine.js', 'assets/api-settings.js').replace('assets/local-engine.css', 'assets/api-settings.css');
-    source = source.replace('id="openLocalEngine" type="button">本地引擎与模型', 'id="openApiSettings" type="button">生图 API 设置');
-    source = source.replace('<span class="gen-model">Qwen-Image 2.1</span>', '<span class="gen-model" id="generationModelLabel">外接生图 API</span>');
+    source = source.replace(/(<button\b[^>]*\bid=)"openLocalEngine"([^>]*>)[\s\S]*?<\/button>/, '$1"openApiSettings"$2生图 API 设置</button>');
+    source = source.replace(/<span\b[^>]*\bclass="gen-model"[^>]*>[\s\S]*?<\/span>/, '<span class="gen-model" id="generationModelLabel">外接生图 API</span>');
     source = source.replace(/<dialog\b[^>]*\bid="localEngineDialog"[^>]*>[\s\S]*?<\/dialog>/, '');
     source = source.replace('</body>', `${apiDialog.trim()}\n</body>`);
   }
@@ -132,7 +132,20 @@ export async function createStudioServer({ root = process.env.GALLERY_ROOT || pa
     if (body.comfyDirectory !== undefined && body.comfyDirectory !== previous.comfyDirectory && body.pythonExecutable === undefined) local.pythonExecutable = '';
     local.externalUrl = normalizeComfyUrl(local.externalUrl);
     if (!Array.isArray(local.modelDirectories) || local.modelDirectories.length > 8) throw new StudioError(400, '模型目录设置不正确');
-    for (const directory of local.modelDirectories) if (typeof directory !== 'string' || !path.isAbsolute(directory) || !(await stat(directory).catch(() => null))?.isDirectory()) throw new StudioError(400, '请填写存在的模型根目录绝对路径');
+    const directories = normalizeModelDirectoryConfigs(local.modelDirectories);
+    if (directories.length !== local.modelDirectories.length) throw new StudioError(400, '模型目录设置不正确');
+    const inherited = new Set(normalizeModelDirectoryConfigs(previous.modelDirectories).map(item => item.path.toLowerCase()));
+    local.modelDirectories = [];
+    for (const directory of directories) {
+      if (!path.isAbsolute(directory.path)) throw new StudioError(400, `模型目录必须是绝对路径：${directory.path}`);
+      if (!(await stat(directory.path).catch(() => null))?.isDirectory()) {
+        // 安装页没有附加目录输入框；迁移已保存的失效路径，不能将用户锁在这里。
+        // 新提交的无效目录仍然报错，防止悄悄忽略输入错误。
+        if (inherited.has(directory.path.toLowerCase())) continue;
+        throw new StudioError(400, `模型目录不存在：${directory.path}`);
+      }
+      local.modelDirectories.push(directory);
+    }
     for (const key of ['comfyDirectory', 'pythonExecutable']) if (typeof local[key] !== 'string' || local[key] && !path.isAbsolute(local[key])) throw new StudioError(400, '已有环境路径必须是绝对路径');
     if (local.comfyDirectory) Object.assign(local, await inspectExistingComfy(local.comfyDirectory, local.pythonExecutable));
     return local;
