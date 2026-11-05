@@ -124,4 +124,6 @@ GitHub 的更新目录只包含项目介绍和 **更新文件**，不包含运�
 
 ## 作者与来源
 
+感谢 **石头大佬** 提供的建议和代码修改。
+
 顶部保留 [ANNO_Yoo杏野 B站主页](https://space.bilibili.com/13412148?spm_id_from=333.337.search-card.all.click) 和 [抖音主页](https://www.douyin.com/user/MS4wLjABAAAA2OkzUY8ng2DVJsc6pzKdsvy2q_vf_jz0MXSXTYiDMWg?from_tab_name=main)。原姿势图库、服装图库的入口、许可证与来源说明继续保留，见 `docs/原项目说明.md` 和 `costume/SOURCE.md`。
