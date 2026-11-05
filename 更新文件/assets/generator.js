@@ -21,6 +21,7 @@
   let loraCatalog = null;
   let loraLoading = false;
   const loraSelection = [];
+  const numberWheelControls = new WeakSet();
   let engineRevision = 0;
   let promptRecord = null;
   let promptRecordKey = '';
@@ -133,6 +134,18 @@
     });
   }
 
+  function bindNumberWheel(input) {
+    if (numberWheelControls.has(input)) return;
+    numberWheelControls.add(input);
+    input.addEventListener('wheel', event => {
+      if (document.activeElement !== input || event.ctrlKey || event.metaKey || event.shiftKey || !event.deltaY || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+      event.preventDefault();
+      const lineHeight = parseFloat(getComputedStyle(input).lineHeight) || 20;
+      const distance = event.deltaY * (event.deltaMode === 1 ? lineHeight : event.deltaMode === 2 ? innerHeight : 1);
+      window.scrollBy({ top: distance, behavior: 'instant' });
+    }, { passive: false });
+  }
+
   function captureLoras() {
     document.querySelectorAll('.gen-lora-row').forEach((row, index) => {
       loraSelection[index] = { name: row.querySelector('select').value, strength: row.querySelector('input').value };
@@ -165,6 +178,7 @@
       select.value = selected.name; modelLabel.htmlFor = select.id; modelLabel.append(select);
       const weightLabel = document.createElement('label'); weightLabel.textContent = '权重';
       const weight = document.createElement('input'); weight.id = `loraStrength${index}`; weight.type = 'number'; weight.min = '-100'; weight.max = '100'; weight.step = '0.01'; weight.value = selected.strength;
+      bindNumberWheel(weight);
       weightLabel.htmlFor = weight.id; weightLabel.append(weight);
       select.addEventListener('change', () => { captureLoras(); formError(); });
       weight.addEventListener('input', () => { captureLoras(); formError(); });
@@ -567,6 +581,7 @@
     ['dragleave', 'drop'].forEach(name => drop.addEventListener(name, event => { event.preventDefault(); drop.classList.remove('is-dragging'); }));
     drop.addEventListener('drop', event => { if (event.dataTransfer.files[0]) setReference(event.dataTransfer.files[0], index); });
   });
+  document.querySelectorAll('#generationForm input[type=number]').forEach(bindNumberWheel);
   $('generationPrompt').addEventListener('input', () => { formError(); updateSubmit(); });
   $('referenceMode').addEventListener('change', () => { formError(); updateSubmit(); });
   $('copyCamera').addEventListener('change', renderSelectedPoseDescription);

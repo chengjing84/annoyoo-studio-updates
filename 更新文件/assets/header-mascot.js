@@ -11,7 +11,8 @@
   let ready = false, visible = true, pinned = false, hovered = false, focused = false;
   let initialized = false, x = 0, target = 0, limit = 0, facing = 1;
   let state = 'sitting', elapsed = 0, stateStarted = 0, restUntil = 0;
-  let lastTime = 0, raf = 0, lastFrame = -1;
+  let lastTime = 0, raf = 0, idleTimer = 0, lastFrame = -1;
+  let mascotWidth = 0, lastPosition = '', lastDreamPosition = '', lastFacing = null;
   let previouslyActive = null;
 
   function setState(next, duration = 0) {
@@ -31,7 +32,8 @@
     setState('running');
   }
   function measure() {
-    limit = Math.max(0, stage.clientWidth - mascot.offsetWidth);
+    mascotWidth = mascot.offsetWidth;
+    limit = Math.max(0, stage.clientWidth - mascotWidth);
     if (!initialized && limit > 0) {
       x = limit * .28; initialized = true;
       startRun();
@@ -41,10 +43,12 @@
     paint();
   }
   function paint() {
-    mascot.style.transform = `translate3d(${x.toFixed(2)}px,0,0)`;
-    // The supplied atlas faces left; mirror it when travelling right.
-    sprite.style.setProperty('--yoyo-facing', -facing);
-    dreams.style.transform = `translate3d(${(x + mascot.offsetWidth * .74).toFixed(2)}px,0,0)`;
+    const position = `translate3d(${x.toFixed(2)}px,0,0)`;
+    const dreamPosition = `translate3d(${(x + mascotWidth * .74).toFixed(2)}px,0,0)`;
+    if (position !== lastPosition) { mascot.style.transform = position; lastPosition = position; }
+    // Cache dimensions in measure(); paint must not force a style/layout read.
+    if (lastFacing !== facing) { sprite.style.setProperty('--yoyo-facing', -facing); lastFacing = facing; }
+    if (dreamPosition !== lastDreamPosition) { dreams.style.transform = dreamPosition; lastDreamPosition = dreamPosition; }
     const age = elapsed - stateStarted;
     let frame;
     if (state === 'running') frame = Math.floor(age / 85) % 8;
@@ -60,7 +64,7 @@
   }
   function tick(time) {
     raf = 0;
-    const delta = lastTime ? Math.min(64, time - lastTime) : 0;
+    const delta = lastTime ? Math.min(state === 'running' ? 64 : 1000, time - lastTime) : 0;
     lastTime = time; elapsed += delta;
     if (state === 'running') {
       const step = delta * .062;
@@ -79,8 +83,13 @@
       dreamDots.forEach(dot => { dot.style.animationPlayState = active ? 'running' : 'paused'; });
       previouslyActive = active;
     }
-    if (active && !raf) raf = requestAnimationFrame(tick);
-    else if (!active) { cancelAnimationFrame(raf); raf = 0; lastTime = 0; }
+    if (!active) {
+      cancelAnimationFrame(raf); clearTimeout(idleTimer);
+      raf = 0; idleTimer = 0; lastTime = 0;
+    } else if (!raf && !idleTimer) {
+      if (state === 'running') raf = requestAnimationFrame(tick);
+      else idleTimer = setTimeout(() => { idleTimer = 0; raf = requestAnimationFrame(tick); }, state === 'sleeping' ? 200 : 100);
+    }
   }
   mascot.addEventListener('click', () => {
     pinned = !pinned;

@@ -3,7 +3,7 @@
   "repository": "Comfy-Org/Qwen-Image-2.1",
   "revision": "aacf31a6d48e707f352ecba714cee0680da3479b",
   "defaultDownloadSource": "mirror",
-  "quarkUrl": "https://pan.quark.cn/s/4085c5633eb8",
+  "quarkUrl": "https://pan.quark.cn/s/80d2ba176a41",
   "quarkCode": "",
   "models": [
     { "id": "diffusion", "name": "Qwen-Image 2.1 主模型 · INT8", "file": "diffusion_models/qwen2.1/qwen_image_2.1_int8_convrot.safetensors", "bytes": 7256783064, "sha256": "cb74113cb03faecd79611b01fd7fd642f0aa60d6f0b95086abee214d75eaa57d", "url": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/aacf31a6d48e707f352ecba714cee0680da3479b/diffusion_models/qwen_image_2.1_int8_convrot.safetensors" },

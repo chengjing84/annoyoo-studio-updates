@@ -14,7 +14,6 @@
 .yoyo-sleep-marks i{position:absolute;bottom:0;left:0;width:3px;height:3px;border-radius:50%;background:#d7a2b0;animation:yoyo-dream 2.8s ease-out infinite}
 .yoyo-sleep-marks i:nth-child(2){animation-delay:.9s}.yoyo-sleep-marks i:nth-child(3){animation-delay:1.8s}
 @keyframes yoyo-dream{0%{opacity:0;transform:translate(0,0) scale(.5)}25%{opacity:.8}100%{opacity:0;transform:translate(8px,-15px) scale(1.2)}}
-@media(min-width:901px){.gen-workspace{height:calc(100dvh - 120px)}}
 @media(max-width:900px) and (min-width:681px){.yoyo-playground{--yoyo-size:56px;height:56px}.studio-header .topbar{height:56px;min-height:56px}}
 @media(max-width:680px){.studio-header .topbar{height:auto;min-height:56px}.yoyo-playground{--yoyo-size:52px;height:48px;flex:1 1 0;margin-top:-3px}.yoyo-mascot{bottom:-3px}.yoyo-ground{bottom:2px}.yoyo-shadow{bottom:6px}.yoyo-sleep-marks{bottom:29px}}
 @media(prefers-reduced-motion:reduce){.yoyo-playground,.yoyo-sleep-marks{transition:none}.yoyo-sleep-marks i{animation:none}.yoyo-sleep-marks i:first-child{opacity:.6}}

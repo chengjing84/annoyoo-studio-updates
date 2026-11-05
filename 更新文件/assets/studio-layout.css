@@ -18,8 +18,8 @@
 .gen-heading{height:24px;min-height:24px;align-items:center;margin-bottom:8px;gap:12px}
 .gen-heading h2{font-size:15px;font-weight:650;line-height:24px;letter-spacing:.02em}
 .gen-model{padding:2px 7px;font-size:10px;font-weight:500;border-radius:5px}
-.gen-workspace{height:calc(100dvh - 112px);min-height:560px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);border-radius:12px}
-.gen-form{padding:14px 16px;display:flex;flex-direction:column;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
+.gen-workspace{height:auto;min-height:max(560px,calc(100dvh - 120px));grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;overflow:clip;border-radius:12px}
+.gen-form{padding:14px 16px;display:flex;flex-direction:column;min-height:0;align-self:stretch;overflow:visible}
 .gen-sources{flex:none;gap:8px 12px;margin-bottom:8px}
 .gen-source{position:relative}
 .gen-label-row{min-height:20px;margin-bottom:4px;line-height:16px}
@@ -61,11 +61,11 @@
 .gen-connection-dot{width:6px;height:6px;margin-top:5px}
 .gen-connection .gen-text-button{font-size:10px}
 .gen-start-help{flex:none;margin:5px 0 0;font-size:10px;line-height:1.5;padding:6px 8px}
-.gen-submit-row{flex:none;position:sticky;bottom:-1px;z-index:2;align-items:center;flex-direction:row;gap:10px;margin-top:auto;padding-top:8px;background:var(--surface)}
+.gen-submit-row{flex:none;position:static;align-items:center;flex-direction:row;gap:10px;margin-top:auto;padding-top:8px;background:var(--surface)}
 .gen-primary{flex:none;min-height:36px;height:36px;width:auto;border-radius:7px;padding-inline:17px;font-size:12px}
 .gen-submit-row>span{min-width:0;font-size:10px;line-height:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gen-form-error{flex:none;font-size:11px;margin-top:6px}
-.gen-output{padding:14px 16px;min-height:0;overflow:hidden}
+.gen-output{position:sticky;top:12px;align-self:start;height:calc(100dvh - 120px);min-height:440px;padding:14px 16px;overflow:hidden}
 .gen-output-heading{margin-bottom:8px;min-height:18px}
 .gen-output-heading h3{font-size:12px;line-height:18px}
 .gen-output-heading>span{font-size:10px}
@@ -89,7 +89,7 @@
   .gen-pose-preview,.gen-upload{height:clamp(110px,24vw,170px)}
   .gen-reference-mode{grid-template-columns:auto minmax(150px,1fr)}
   .gen-reference-mode .gen-field-hint{grid-column:1/-1;white-space:normal;font-size:10px}
-  .gen-output{padding:14px 16px;border-left:0;border-top:1px solid var(--line)}
+  .gen-output{position:static;height:auto;min-height:0;padding:14px 16px;border-left:0;border-top:1px solid var(--line)}
   .gen-result-stage{flex:none;height:clamp(300px,70dvh,620px);min-height:300px}
   .gen-submit-row{position:static;margin-top:5px}
   .gen-options{display:flex;flex-wrap:wrap}
@@ -122,3 +122,6 @@
   .creator-links a{min-height:36px}
   .source-links{margin-left:auto;gap:18px}
 }
+
+#generationForm #generationPrompt{field-sizing:content;height:auto;min-height:64px;max-height:none}
+.gen-form .gen-prompt-preview pre,.gen-form .gen-selected-description .pose-description-text{max-height:none;overflow:visible}
